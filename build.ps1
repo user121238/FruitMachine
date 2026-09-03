@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # 水果机 APK 一键构建脚本
 # 1. 自动同步根目录 index.html 到 android/assets/index.html
 # 2. 拷贝至纯 ASCII 临时目录避免 aapt2 中文路径问题
@@ -53,7 +53,7 @@ if (Test-Path (Join-Path $ProjectDir "images.js")) {
     Write-Host "  [OK] images.js 已同步至 android/assets/images.js" -ForegroundColor Green
 }
 if (Test-Path (Join-Path $ProjectDir "images")) {
-    Copy-Item (Join-Path $ProjectDir "images") (Join-Path $ProjectDir "android\assets\images") -Recurse -Force
+    Copy-Item (Join-Path $ProjectDir "images\*") (Join-Path $ProjectDir "android\assets\images") -Recurse -Force
     Write-Host "  [OK] images 目录已同步至 android/assets/images" -ForegroundColor Green
 }
 

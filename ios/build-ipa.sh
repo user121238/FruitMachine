@@ -15,6 +15,7 @@ echo "  [OK] iPhoneOS SDK: $SDK_PATH"
 
 echo ">>> [2/4] 编译 ARM64 Mach-O 原生二进制 (FruitSlot)..."
 xcrun -sdk iphoneos swiftc \
+    -parse-as-library \
     -target arm64-apple-ios14.0 \
     -sdk "$SDK_PATH" \
     -framework UIKit -framework WebKit -framework Foundation \

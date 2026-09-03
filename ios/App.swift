@@ -40,7 +40,7 @@ class WebViewController: UIViewController {
         // 优先加载竖版街机机台 cabinet.html，若未找到则加载 index.html
         if let url = Bundle.main.url(forResource: "cabinet", withExtension: "html") ??
                      Bundle.main.url(forResource: "index", withExtension: "html") {
-            webView.loadFileURL(url, allowingReadAccessToURL: Bundle.main.bundleURL)
+            _ = webView.loadFileURL(url, allowingReadAccessTo: Bundle.main.bundleURL)
         }
     }
 
