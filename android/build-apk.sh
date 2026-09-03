@@ -61,11 +61,11 @@ echo ">>> [5/5] 对齐 (zipalign) 与自签名 (apksigner)..."
 KEYSTORE="$ROOT_DIR/fruit-release.jks"
 if [ ! -f "$KEYSTORE" ]; then
     keytool -genkeypair -v -keystore "$KEYSTORE" -alias fruit -keyalg RSA -keysize 2048 -validity 10000 \
-        -storepass 123456 -keypass 123456 -dname "CN=Fruit, OU=Game, O=Arcade, L=BJ, ST=BJ, C=CN"
+        -storepass fruit2026 -keypass fruit2026 -dname "CN=Fruit, OU=Game, O=Arcade, L=BJ, ST=BJ, C=CN"
 fi
 
 APK_NAME="水果大满贯.apk"
-"$APKSIGNER" sign --ks "$KEYSTORE" --ks-pass pass:123456 --ks-key-alias fruit --key-pass pass:123456 \
+"$APKSIGNER" sign --ks "$KEYSTORE" --ks-pass pass:fruit2026 --ks-key-alias fruit --key-pass pass:fruit2026 \
     --out "$OUTPUT_DIR/$APK_NAME" "$BUILD_DIR/aligned.apk"
 
 rm -rf "$BUILD_DIR"
