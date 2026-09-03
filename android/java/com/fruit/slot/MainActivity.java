@@ -32,7 +32,13 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(true);     // targetSdk>=30 默认关闭，必须显式打开
         s.setMediaPlaybackRequiresUserGesture(false);
         web.setWebViewClient(new WebViewClient());
-        web.loadUrl("file:///android_asset/index.html");
+        try {
+            java.io.InputStream is = getAssets().open("cabinet.html");
+            is.close();
+            web.loadUrl("file:///android_asset/cabinet.html");
+        } catch (Exception e) {
+            web.loadUrl("file:///android_asset/index.html");
+        }
         setContentView(web);
 
         applyImmersive();

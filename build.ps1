@@ -44,6 +44,10 @@ $D8 = Join-Path $BuildToolsDir "d8.bat"
 Write-Host ">>> [1/6] 检查与同步资产文件..." -ForegroundColor Cyan
 Copy-Item (Join-Path $ProjectDir "index.html") (Join-Path $ProjectDir "android\assets\index.html") -Force
 Write-Host "  [OK] index.html 已同步至 android/assets/index.html" -ForegroundColor Green
+if (Test-Path (Join-Path $ProjectDir "cabinet.html")) {
+    Copy-Item (Join-Path $ProjectDir "cabinet.html") (Join-Path $ProjectDir "android\assets\cabinet.html") -Force
+    Write-Host "  [OK] cabinet.html (竖版机台) 已同步至 android/assets/cabinet.html" -ForegroundColor Green
+}
 if (Test-Path (Join-Path $ProjectDir "images.js")) {
     Copy-Item (Join-Path $ProjectDir "images.js") (Join-Path $ProjectDir "android\assets\images.js") -Force
     Write-Host "  [OK] images.js 已同步至 android/assets/images.js" -ForegroundColor Green
