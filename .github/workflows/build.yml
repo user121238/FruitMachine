@@ -68,12 +68,12 @@ jobs:
           if-no-files-found: error
 
   # ==========================================
-  # 3. 自动发布 Release (当推送 Tag 时触发)
+  # 3. 自动发布 Release (推送 master 或 Tag 均自动发布)
   # ==========================================
   release:
     name: Create GitHub Release
     needs: [build-apk, build-ipa]
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
 
     steps:
@@ -87,9 +87,22 @@ jobs:
         with:
           name: 水果大满贯-iOS-IPA
 
+      - name: Set Release Tag
+        id: vars
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            echo "title=水果大满贯 ${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=latest" >> $GITHUB_OUTPUT
+            echo "title=水果大满贯 最新构建 (Rolling Build)" >> $GITHUB_OUTPUT
+          fi
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: ${{ steps.vars.outputs.title }}
           files: |
             水果大满贯.apk
             水果大满贯.ipa
