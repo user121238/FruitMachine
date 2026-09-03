@@ -1,0 +1,98 @@
+name: Build Game Packages (APK & IPA)
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # ==========================================
+  # 1. Android APK 构建流水线 (基于 Ubuntu)
+  # ==========================================
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build Android APK
+        run: |
+          chmod +x android/build-apk.sh
+          ./android/build-apk.sh
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 水果大满贯-Android-APK
+          path: 水果大满贯.apk
+          if-no-files-found: error
+
+  # ==========================================
+  # 2. iOS IPA 构建流水线 (基于 macOS Xcode)
+  # ==========================================
+  build-ipa:
+    name: Build iOS IPA (Unsigned / TrollStore)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Build iOS IPA
+        run: |
+          chmod +x ios/build-ipa.sh
+          ./ios/build-ipa.sh
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 水果大满贯-iOS-IPA
+          path: 水果大满贯.ipa
+          if-no-files-found: error
+
+  # ==========================================
+  # 3. 自动发布 Release (当推送 Tag 时触发)
+  # ==========================================
+  release:
+    name: Create GitHub Release
+    needs: [build-apk, build-ipa]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download APK Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: 水果大满贯-Android-APK
+
+      - name: Download IPA Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: 水果大满贯-iOS-IPA
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            水果大满贯.apk
+            水果大满贯.ipa
+          draft: false
+          prerelease: false
+          generate_release_notes: true
