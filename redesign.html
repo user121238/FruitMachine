@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>水果大满贯 · NEO ARCADE 旗舰版</title>
+<style>
+  :root {
+    --bg-dark: #07090e;
+    --panel-bg: rgba(14, 18, 27, 0.82);
+    --panel-border: rgba(255, 255, 255, 0.08);
+    --titanium: linear-gradient(145deg, #2a313d, #141820);
+    --neon-gold: #f59e0b;
+    --neon-ruby: #ef4444;
+    --neon-cyan: #06b6d4;
+    --neon-emerald: #10b981;
+    --text-main: #e2e8f0;
+    --text-dim: #64748b;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { width:100%; height:100%; overflow:hidden; background:var(--bg-dark); }
+  body {
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    touch-action:manipulation; user-select:none; -webkit-user-select:none;
+    color:var(--text-main);
+  }
+  #cyberBackdrop {
+    position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 20%, rgba(6, 182, 212, 0.08), transparent 70%),
+      radial-gradient(ellipse 90% 70% at 50% 85%, rgba(245, 158, 11, 0.06), transparent 70%),
+      #06080d;
+  }
+  #cyberBackdrop::before {
+    content:""; position:absolute; inset:0;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size:32px 32px;
+    mask-image:radial-gradient(ellipse at 50% 50%, black 40%, transparent 80%);
+    -webkit-mask-image:radial-gradient(ellipse at 50% 50%, black 40%, transparent 80%);
+  }
+  #appViewport {
+    position:absolute; inset:0; z-index:1;
+    display:flex; flex-direction:column;
+    height:100vh; max-height:100vh; overflow:hidden;
+    padding:0.8vh 1.4vw; max-width:1800px; margin:0 auto;
+  }
+  #appViewport.shake { animation:impactShake .5s cubic-bezier(.36,.07,.19,.97) both; }
+  @keyframes impactShake {
+    10%, 90% { transform: translate3d(-3px, 0, 0); }
+    20%, 80% { transform: translate3d(4px, 2px, 0); }
+    30%, 50%, 70% { transform: translate3d(-5px, -3px, 0); }
+    40%, 60% { transform: translate3d(5px, 2px, 0); }
+  }
+  #topHud {
+    flex:0 0 6.6vh; min-height:48px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0.5vh 1.4vw; background:var(--panel-bg);
+    border:1px solid var(--panel-border); border-radius:1.2vh;
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    box-shadow:0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .hudBrand { display:flex; align-items:center; gap:0.6vw; }
+  .hudLogo {
+    font-size:2.3vh; font-weight:900; letter-spacing:0.08em;
+    background:linear-gradient(135deg, #fff 20%, #ffd34d 60%, #f59e0b 100%);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    text-shadow:0 0 20px rgba(245,158,11,0.3);
+  }
+  .hudTag {
+    font-size:1.1vh; font-weight:800; padding:0.2vh 0.5vw;
+    background:rgba(6, 182, 212, 0.15); border:1px solid rgba(6, 182, 212, 0.4);
+    color:var(--neon-cyan); border-radius:0.4vh; letter-spacing:0.1em;
+  }
+  .hudMeters { display:flex; align-items:center; gap:1.2vw; }
+  .meterBox {
+    display:flex; flex-direction:column; justify-content:center;
+    background:rgba(0, 0, 0, 0.45); border:1px solid rgba(255, 255, 255, 0.06);
+    border-radius:0.8vh; padding:0.3vh 1vw; min-width:130px; position:relative; overflow:hidden;
+  }
+  .meterBox::after {
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,0.2) 0 1px, transparent 1px 3px);
+  }
+  .meterLabel { font-size:1.1vh; font-weight:700; color:var(--text-dim); letter-spacing:0.15em; text-transform:uppercase; }
+  .meterValue {
+    font-family:"Courier New", monospace; font-size:2.5vh; font-weight:900;
+    text-align:right; letter-spacing:0.04em;
+  }
+  .meterCredit .meterValue { color:#facc15; text-shadow:0 0 12px rgba(250,204,21,0.5); }
+  .meterWin .meterValue { color:#4ade80; text-shadow:0 0 12px rgba(74,222,128,0.6); }
+  .meterBet .meterValue { color:#38bdf8; text-shadow:0 0 12px rgba(56,189,248,0.5); }
+  .meterWin.pulse { animation:winGlow 0.8s infinite alternate; }
+  @keyframes winGlow {
+    from { border-color:rgba(74,222,128,0.3); box-shadow:0 0 10px rgba(74,222,128,0.2); }
+    to { border-color:rgba(74,222,128,0.8); box-shadow:0 0 20px rgba(74,222,128,0.5); }
+  }
+  .hudActions { display:flex; align-items:center; gap:0.6vw; }
+  .btnHud {
+    padding:0.6vh 1vw; font-size:1.4vh; font-weight:700;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12);
+    color:var(--text-main); border-radius:0.6vh; cursor:pointer;
+    display:flex; align-items:center; gap:0.4vw; transition:all 0.15s ease;
+  }
+  .btnHud:hover { background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.25); transform:translateY(-1px); }
+  .btnHud:active { transform:translateY(1px); }
+
+  #coreStage { flex:1 1 auto; display:flex; gap:1vw; padding:0.6vh 0; min-height:0; overflow:hidden; }
+  .wingPanel {
+    flex:0 0 clamp(190px, 16vw, 270px);
+    background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:1.4vh; padding:1.2vh 1vw;
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    box-shadow:0 8px 30px rgba(0,0,0,0.5);
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .wingTitle {
+    font-size:1.3vh; font-weight:800; color:var(--text-dim);
+    letter-spacing:0.18em; text-transform:uppercase; padding-bottom:0.6vh;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .gambleControls { display:flex; flex-direction:column; gap:1vh; margin:auto 0; }
+  .btnGamble {
+    width:100%; height:8.5vh; border-radius:1vh; border:none; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-family:inherit; font-size:3vh; font-weight:900; color:#fff;
+    transition:transform 0.12s cubic-bezier(.32,.72,0,1), filter 0.2s, box-shadow 0.2s;
+  }
+  .btnGamble small { font-size:1.3vh; letter-spacing:0.1em; opacity:0.8; margin-top:0.2vh; }
+  .btnBig { background:linear-gradient(145deg, #ef4444, #991b1b); box-shadow:0 6px 18px rgba(239,68,68,0.35); }
+  .btnSmall { background:linear-gradient(145deg, #0284c7, #075985); box-shadow:0 6px 18px rgba(2,132,199,0.35); }
+  .btnGamble:active { transform:translateY(2px) scale(0.98); }
+  .btnGamble.ready { animation:gamblePulse 0.9s infinite alternate; }
+  @keyframes gamblePulse { from { filter:brightness(1); } to { filter:brightness(1.3); box-shadow:0 0 24px rgba(255,255,255,0.4); } }
+  .btnGamble:disabled { filter:grayscale(0.85) brightness(0.35); cursor:not-allowed; animation:none; }
+  .transActions { display:flex; flex-direction:column; gap:0.6vh; }
+  .btnTrans {
+    width:100%; padding:0.85vh 0; font-size:1.3vh; font-weight:700;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+    color:var(--text-main); border-radius:0.6vh; cursor:pointer; transition:all 0.15s ease;
+  }
+  .btnTrans:hover:not(:disabled) { background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.2); }
+  .btnTrans:disabled { opacity:0.35; cursor:not-allowed; }
+  .chipsGrid { display:grid; grid-template-columns:repeat(3, 1fr); gap:0.6vw; margin:auto 0; }
+  .neoChip {
+    aspect-ratio:1/1; border-radius:50%; border:2px solid rgba(255,255,255,0.15);
+    background:radial-gradient(circle at 35% 30%, #2a3140, #131722);
+    box-shadow:0 6px 14px rgba(0,0,0,0.5);
+    color:var(--text-main); font-family:"Courier New", monospace; font-size:1.8vh; font-weight:900;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:transform 0.15s cubic-bezier(.32,.72,0,1), border-color 0.15s, box-shadow 0.15s;
+    position:relative;
+  }
+  .neoChip::before {
+    content:""; position:absolute; inset:3px; border-radius:50%;
+    border:1px dashed rgba(255,255,255,0.2); pointer-events:none;
+  }
+  .neoChip.sel {
+    transform:translateY(-4px) scale(1.12); border-color:var(--neon-cyan);
+    box-shadow:0 10px 24px rgba(6,182,212,0.4), 0 0 16px rgba(6,182,212,0.6); color:#fff;
+  }
+  .neoChip:active { transform:scale(0.95); }
+  .wingButtons { display:flex; flex-direction:column; gap:0.6vh; }
+  .btnUtil {
+    width:100%; padding:0.9vh 0; font-size:1.4vh; font-weight:700;
+    border-radius:0.7vh; border:none; cursor:pointer; font-family:inherit; transition:all 0.15s ease;
+  }
+  .btnCreditUp { background:linear-gradient(145deg, #10b981, #047857); color:#fff; box-shadow:0 4px 12px rgba(16,185,129,0.3); }
+  .btnCreditDown { background:linear-gradient(145deg, #64748b, #334155); color:#fff; }
+  .btnClearBets { background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:#f87171; }
+  .btnUtil:active { transform:translateY(1px); }
+
+  /* ============ 中央轮盘舞台（绝对对齐居中） ============ */
+  #wheelArena {
+    flex:1 1 auto; display:flex; align-items:center; justify-content:center;
+    min-width:0; min-height:0; position:relative; overflow:hidden;
+  }
+  #wheelWrapper {
+    position:relative; display:flex; align-items:center; justify-content:center;
+  }
+  #wheelCanvas {
+    position:absolute; inset:0; width:100%; height:100%;
+    filter:drop-shadow(0 12px 36px rgba(0,0,0,0.8));
+  }
+  #laserPointer {
+    position:absolute; top:-4px; left:50%; transform:translateX(-50%);
+    width:0; height:0; z-index:10; pointer-events:none;
+    border-left:1.6vh solid transparent; border-right:1.6vh solid transparent;
+    border-top:3.2vh solid #06b6d4; filter:drop-shadow(0 0 12px #06b6d4);
+  }
+  #laserPointer::after {
+    content:""; position:absolute; top:-3.2vh; left:-0.7vh;
+    border-left:0.7vh solid transparent; border-right:0.7vh solid transparent;
+    border-top:1.6vh solid #fff;
+  }
+  #coreReactor {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:34%; height:34%; border-radius:50%; z-index:8;
+    background:radial-gradient(circle, #171b26 40%, #0c0e14 90%);
+    border:2px solid rgba(255,255,255,0.12);
+    box-shadow:0 0 40px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8);
+    display:flex; align-items:center; justify-content:center; padding:0.8vh;
+  }
+  #coreReactor::before {
+    content:""; position:absolute; inset:-6px; border-radius:50%;
+    border:2px dashed rgba(6, 182, 212, 0.4);
+    animation:reactorSpin 18s linear infinite; pointer-events:none;
+  }
+  @keyframes reactorSpin { to { transform:rotate(360deg); } }
+  #btnGo {
+    width:100%; height:100%; border-radius:50%; border:none; cursor:pointer;
+    color:#fff; font-size:4.4vh; font-weight:900; line-height:1; font-family:inherit;
+    background:radial-gradient(circle at 35% 28%, #38bdf8 0%, #0284c7 50%, #0369a1 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -8px 16px rgba(0,0,0,0.4), 0 8px 24px rgba(2,132,199,0.45);
+    transition:transform 0.12s cubic-bezier(.32,.72,0,1), filter 0.2s;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  #btnGo small { font-size:1.3vh; letter-spacing:0.3em; text-indent:0.3em; opacity:0.9; margin-top:0.3vh; }
+  #btnGo:active { transform:scale(0.95); }
+  #btnGo.ready { animation:goPulse 1.2s infinite alternate; }
+  @keyframes goPulse {
+    from { filter:brightness(1); box-shadow:0 0 20px rgba(6,182,212,0.4); }
+    to { filter:brightness(1.25); box-shadow:0 0 45px rgba(6,182,212,0.85); }
+  }
+  #btnGo:disabled { filter:grayscale(0.85) brightness(0.35); cursor:not-allowed; animation:none; }
+  #diceOverlay {
+    position:absolute; inset:0; border-radius:50%; z-index:9;
+    background:rgba(10, 14, 22, 0.95); border:2px solid var(--neon-gold);
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    box-shadow:0 0 30px rgba(245,158,11,0.5);
+  }
+  #diceOverlay.show { display:flex; animation:dicePop 0.25s ease-out; }
+  @keyframes dicePop { from { transform:scale(0.7); opacity:0; } to { transform:scale(1); opacity:1; } }
+  #diceFaces { font-size:4.2vh; letter-spacing:0.1em; }
+  #diceResult { font-size:1.8vh; font-weight:900; color:var(--neon-gold); margin-top:0.2vh; }
+
+  #deckStage {
+    flex:0 0 21vh; min-height:140px; display:flex; align-items:stretch; gap:0.8vw;
+    background:var(--panel-bg); border:1px solid var(--panel-border);
+    border-radius:1.4vh; padding:1vh 1.2vw; backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px); box-shadow:0 12px 36px rgba(0,0,0,0.6);
+  }
+  #betTiles { flex:1; display:flex; gap:0.6vw; align-items:stretch; }
+  .betCard {
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+    border-radius:1vh; padding:0.6vh 0.4vw; cursor:pointer; position:relative;
+    transition:all 0.15s cubic-bezier(.32,.72,0,1); user-select:none; -webkit-user-select:none;
+  }
+  .betCard:hover { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.18); transform:translateY(-2px); }
+  .betCard:active { transform:translateY(1px) scale(0.98); }
+  .betCard.hasBet {
+    border-color:rgba(245, 158, 11, 0.6);
+    background:radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.15), rgba(0,0,0,0.4));
+    box-shadow:0 0 16px rgba(245,158,11,0.25);
+  }
+  .betCard.winPulse { animation:cardWinFlash 0.45s infinite alternate; }
+  @keyframes cardWinFlash {
+    from { filter:brightness(1); border-color:rgba(74,222,128,0.6); }
+    to { filter:brightness(1.5); border-color:#4ade80; box-shadow:0 0 24px rgba(74,222,128,0.7); }
+  }
+  .cardIconBox { width:min(10.5vh, 85%); aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; position:relative; }
+  .cardIconImg { width:82%; height:82%; object-fit:contain; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.6)); pointer-events:none; }
+  .cardIconImg.barImg { filter:drop-shadow(0 0 6px rgba(255,255,255,0.8)) brightness(2.6); }
+  .cardName { font-size:1.6vh; font-weight:800; color:var(--text-main); }
+  .cardOdds { font-size:1.5vh; font-weight:900; color:var(--neon-gold); font-family:"Courier New", monospace; letter-spacing:0.02em; }
+  .cardBetBadge {
+    position:absolute; top:-0.6vh; right:-0.4vw; min-width:3.2vh; height:3.2vh; padding:0 0.5vw;
+    border-radius:1.6vh; background:linear-gradient(135deg, #f59e0b, #d97706);
+    color:#fff; font-family:"Courier New", monospace; font-size:1.4vh; font-weight:900;
+    display:none; align-items:center; justify-content:center;
+    box-shadow:0 4px 10px rgba(0,0,0,0.5), 0 0 10px rgba(245,158,11,0.5); border:1px solid #ffedd5;
+  }
+  #deckTriggerSide { flex:0 0 clamp(120px, 11vw, 170px); display:flex; flex-direction:column; gap:0.8vh; }
+  #btnDeckSpin {
+    flex:1; border-radius:1vh; border:none; cursor:pointer;
+    background:linear-gradient(145deg, #0284c7, #0369a1); color:#fff;
+    font-size:3vh; font-weight:900; font-family:inherit;
+    box-shadow:0 6px 20px rgba(2,132,199,0.4); transition:all 0.15s ease;
+  }
+  #btnDeckSpin:active { transform:scale(0.96); }
+  #btnDeckSpin:disabled { filter:grayscale(0.8) brightness(0.4); cursor:not-allowed; }
+
+  #fxCanvas { position:fixed; inset:0; pointer-events:none; z-index:50; }
+  #toastBox {
+    position:fixed; top:11vh; left:50%; transform:translateX(-50%) translateY(-20px);
+    padding:1.2vh 2.4vw; font-size:2.2vh; font-weight:800; border-radius:1vh; color:#fff; white-space:nowrap;
+    background:rgba(15, 23, 42, 0.95); border:1px solid rgba(245,158,11,0.5);
+    box-shadow:0 12px 36px rgba(0,0,0,0.8), 0 0 20px rgba(245,158,11,0.3);
+    opacity:0; transition:opacity 0.25s, transform 0.25s; z-index:90; pointer-events:none;
+  }
+  #toastBox.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  #bigWinBanner {
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    flex-direction:column; z-index:80; pointer-events:none;
+    background:radial-gradient(ellipse at center, rgba(6,182,212,0.2), transparent 70%);
+  }
+  #bigWinBanner.show { display:flex; }
+  .bwTitle {
+    font-size:10vh; font-weight:900; color:#ffd34d;
+    text-shadow:0 0 35px #f59e0b, 0 4px 0 #92400e, 0 10px 30px rgba(0,0,0,0.9);
+    animation:bwPulse 0.5s infinite alternate;
+  }
+  .bwAmount { font-size:5vh; font-weight:900; color:#fff; text-shadow:0 0 20px rgba(255,255,255,0.8); }
+  @keyframes bwPulse { from { transform:scale(1); } to { transform:scale(1.08); } }
+
+  #historyModal {
+    position:fixed; inset:0; z-index:150; display:none; align-items:center; justify-content:center;
+    background:rgba(4, 6, 10, 0.85); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  }
+  #historyModal.show { display:flex; animation:modalFadeIn 0.2s ease-out; }
+  @keyframes modalFadeIn { from { opacity:0; } to { opacity:1; } }
+  .neoModalBox {
+    width:min(90vw, 880px); height:min(88vh, 640px);
+    background:linear-gradient(180deg, #161c28, #0a0e16 80%);
+    border:1px solid rgba(255,255,255,0.12); border-radius:1.4vh;
+    box-shadow:0 16px 48px rgba(0,0,0,0.9); display:flex; flex-direction:column; overflow:hidden;
+  }
+  .neoModalHeader {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1.4vh 1.8vw; background:rgba(0,0,0,0.3); border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .neoModalTitle { font-size:2.4vh; font-weight:900; color:#fff; }
+  .neoModalSummary {
+    display:flex; gap:1vw; padding:1.2vh 1.8vw;
+    background:rgba(0,0,0,0.2); border-bottom:1px solid rgba(255,255,255,0.05);
+  }
+  .sumCard {
+    flex:1; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);
+    border-radius:0.8vh; padding:0.8vh 1vw; text-align:center;
+  }
+  .sumCardLab { font-size:1.2vh; color:var(--text-dim); display:block; margin-bottom:0.2vh; }
+  .sumCardVal { font-size:2.4vh; font-weight:900; font-family:"Courier New", monospace; color:#fff; }
+  .sumCardVal.highlight { color:var(--neon-gold); }
+  .neoModalBody {
+    flex:1; overflow-y:auto; padding:1vh 1.8vw;
+    scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.2) transparent;
+  }
+  .neoHistTable { width:100%; border-collapse:collapse; font-size:1.8vh; text-align:left; }
+  .neoHistTable th {
+    padding:1vh 1vw; color:var(--text-dim); font-size:1.4vh; font-weight:700;
+    border-bottom:1px solid rgba(255,255,255,0.08); position:sticky; top:0; background:#111622; z-index:2;
+  }
+  .neoHistTable td { padding:0.9vh 1vw; border-bottom:1px solid rgba(255,255,255,0.04); color:var(--text-main); }
+  .neoHistTable tr:hover { background:rgba(255,255,255,0.03); }
+  .badgeTag { display:inline-block; padding:0.2vh 0.6vw; border-radius:0.4vh; font-size:1.3vh; font-weight:800; margin-right:0.4vw; }
+  .badgeTag.luck { background:linear-gradient(135deg, #10b981, #059669); color:#fff; }
+  .badgeTag.win { background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; }
+  .badgeTag.loss { background:rgba(255,255,255,0.08); color:var(--text-dim); }
+  .txtWin { color:#4ade80; font-weight:900; }
+  .txtLoss { color:var(--text-dim); }
+  #rotateWarning {
+    position:fixed; inset:0; z-index:300; display:none; align-items:center; justify-content:center;
+    flex-direction:column; gap:2vh; background:#07090e; color:var(--neon-gold); font-size:3vh; font-weight:800; text-align:center;
+  }
+  @media (orientation:portrait) { #rotateWarning { display:flex; } }
+</style>
+</head>
+<body>
+<div id="cyberBackdrop"></div>
+
+<div id="appViewport">
+  <header id="topHud">
+    <div class="hudBrand">
+      <div class="hudLogo">⚡ 水果大满贯</div>
+      <span class="hudTag">TITANIUM NEO</span>
+    </div>
+    <div class="hudMeters">
+      <div class="meterBox meterCredit">
+        <span class="meterLabel">Credits 余额</span>
+        <span class="meterValue" id="meterCredit">0</span>
+      </div>
+      <div class="meterBox meterWin" id="meterWinBox">
+        <span class="meterLabel">Win 奖金</span>
+        <span class="meterValue" id="meterWin">0</span>
+      </div>
+      <div class="meterBox meterBet">
+        <span class="meterLabel">Total Bet 本局注</span>
+        <span class="meterValue" id="meterBet">0</span>
+      </div>
+    </div>
+    <div class="hudActions">
+      <button class="btnHud" id="btnHistModal">📜 记录</button>
+      <button class="btnHud" id="btnAudioToggle">🔊 音效</button>
+      <button class="btnHud" id="btnFullscreen">⛶ 全屏</button>
+    </div>
+  </header>
+
+  <main id="coreStage">
+    <aside class="wingPanel">
+      <div class="wingTitle"><span>Gamble</span><span>比倍战术</span></div>
+      <div class="gambleControls">
+        <button class="btnGamble btnBig" id="btnGambleBig">大<small>×2.0 (8-13)</small></button>
+        <button class="btnGamble btnSmall" id="btnGambleSmall">小<small>×2.0 (1-6)</small></button>
+      </div>
+      <div class="transActions">
+        <button class="btnTrans" id="btnTransferIn">▼ 注入奖池 (全量)</button>
+        <button class="btnTrans" id="btnTransferOut">▲ 锁定收益 (半数)</button>
+      </div>
+    </aside>
+
+    <section id="wheelArena">
+      <div id="wheelWrapper">
+        <div id="laserPointer"></div>
+        <canvas id="wheelCanvas"></canvas>
+        <div id="coreReactor">
+          <button id="btnGo" class="ready">SPIN<small>开 始</small></button>
+          <div id="diceOverlay">
+            <div id="diceFaces">🎲🎲🎲</div>
+            <div id="diceResult">准备中</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="wingPanel">
+      <div class="wingTitle"><span>Chips</span><span>筹码配置</span></div>
+      <div class="chipsGrid" id="chipsDock"></div>
+      <div class="wingButtons">
+        <button class="btnUtil btnCreditUp" id="btnDeposit">⚡ 快捷上分 (+1000)</button>
+        <button class="btnUtil btnCreditDown" id="btnWithdraw">结算下分</button>
+        <button class="btnUtil btnResetBets" id="btnResetBets">清空当前下注</button>
+      </div>
+    </aside>
+  </main>
+
+  <footer id="deckStage">
+    <div id="betTiles"></div>
+    <div id="deckTriggerSide">
+      <button id="btnDeckSpin">开 始</button>
+    </div>
+  </footer>
+</div>
+
+<canvas id="fxCanvas"></canvas>
+<div id="toastBox"></div>
+<div id="bigWinBanner"><div class="bwTitle">MEGA WIN</div><div class="bwAmount" id="bwAmountText"></div></div>
+
+<div id="historyModal">
+  <div class="neoModalBox">
+    <div class="neoModalHeader">
+      <div class="neoModalTitle">📜 对局历史战报</div>
+      <div style="display:flex;gap:0.6vw;">
+        <button class="btnHud" id="btnClearHist">清空数据</button>
+        <button class="btnHud" id="btnCloseHist">✕ 关闭</button>
+      </div>
+    </div>
+    <div class="neoModalSummary">
+      <div class="sumCard"><span class="sumCardLab">总局数</span><span class="sumCardVal" id="histRounds">0</span></div>
+      <div class="sumCard"><span class="sumCardLab">胜率</span><span class="sumCardVal" id="histRate">0%</span></div>
+      <div class="sumCard"><span class="sumCardLab">单局最高爆发</span><span class="sumCardVal highlight" id="histTopWin">0</span></div>
+      <div class="sumCard"><span class="sumCardLab">当前可用余额</span><span class="sumCardVal highlight" id="histCredit">0</span></div>
+    </div>
+    <div class="neoModalBody">
+      <table class="neoHistTable">
+        <thead>
+          <tr>
+            <th>时间</th>
+            <th>落点标识</th>
+            <th>押注额</th>
+            <th>得分</th>
+            <th>权益余额</th>
+          </tr>
+        </thead>
+        <tbody id="histRows"></tbody>
+      </table>
+      <div id="histEmptyTip" style="text-align:center;padding:8vh 0;color:var(--text-dim);font-size:2vh;">暂无历史对局数据</div>
+    </div>
+  </div>
+</div>
+
+<div id="rotateWarning">
+  <div style="font-size:8vh;">📱</div>
+  <div>为了极致视觉体验，请横向持握设备</div>
+</div>
+
+<script src="images.js"></script>
+<script>
+'use strict';
+if (typeof IMGS === 'undefined') window.IMGS = {};
+
+const PARENTS = [
+  {name:'橙子', imgKey:'orange',     color:'#f59e0b', colorDark:'#b45309'},
+  {name:'苹果', imgKey:'apple',      color:'#ef4444', colorDark:'#991b1b'},
+  {name:'柠檬', imgKey:'lemon',      color:'#eab308', colorDark:'#854d0e'},
+  {name:'铃铛', imgKey:'bell',       color:'#fbbf24', colorDark:'#b45309'},
+  {name:'西瓜', imgKey:'watermelon', color:'#10b981', colorDark:'#047857'},
+  {name:'双星', imgKey:'star',       color:'#8b5cf6', colorDark:'#5b21b6'},
+  {name:'77',   imgKey:'seven',      color:'#ec4899', colorDark:'#9d174d'},
+  {name:'BAR',  imgKey:'bar',        color:'#e2e8f0', colorDark:'#475569', bar:true},
+];
+const PARENT_N = PARENTS.length;
+
+const SYMS = [
+  {p:0, name:'大橙子', odds:10,  weight:90,  imgKey:'orange'},
+  {p:0, name:'小橙子', odds:3,   weight:20,  small:true, imgKey:'orange'},
+  {p:1, name:'大苹果', odds:5,   weight:220, imgKey:'apple'},
+  {p:1, name:'小苹果', odds:3,   weight:30,  small:true, imgKey:'apple'},
+  {p:2, name:'大柠檬', odds:15,  weight:60,  imgKey:'lemon'},
+  {p:2, name:'小柠檬', odds:3,   weight:15,  small:true, imgKey:'lemon'},
+  {p:3, name:'大铃铛', odds:20,  weight:42,  imgKey:'bell'},
+  {p:3, name:'小铃铛', odds:3,   weight:12,  small:true, imgKey:'bell'},
+  {p:4, name:'大西瓜', odds:20,  weight:42,  imgKey:'watermelon'},
+  {p:4, name:'小西瓜', odds:3,   weight:12,  small:true, imgKey:'watermelon'},
+  {p:5, name:'双星',   odds:30,  weight:30,  imgKey:'star'},
+  {p:5, name:'小双星', odds:3,   weight:10,  small:true, imgKey:'star'},
+  {p:6, name:'77',     odds:40,  weight:22,  imgKey:'seven'},
+  {p:6, name:'小77',   odds:3,   weight:8,   small:true, imgKey:'seven'},
+  {p:7, name:'单BAR',  odds:50,  weight:12,  bar:1, imgKey:'bar'},
+  {p:7, name:'大BAR',  odds:120, weight:5,   bar:2, imgKey:'bar'},
+  {p:-1, name:'绿LUCK', odds:0,  weight:15,  luck:'green', imgKey:'ingots'},
+  {p:-1, name:'橙LUCK', odds:0,  weight:15,  luck:'orange', imgKey:'ingots'},
+];
+const SYM_N = SYMS.length;
+const TOTAL_WEIGHT = SYMS.reduce((sum, s) => sum + s.weight, 0);
+
+const LAMPS = [0, 6, 14, 15, 2, 3, 4, 8, 9, 16, 2, 1, 0, 6, 13, 12, 2, 5, 4, 10, 11, 17, 2, 7];
+const LAMP_N = LAMPS.length;
+
+const ODDS_RANGE = [
+  {min:3, max:10}, {min:3, max:5}, {min:3, max:15}, {min:3, max:20},
+  {min:3, max:20}, {min:3, max:30}, {min:3, max:40}, {min:50, max:120}
+];
+
+const LUCK_EVENTS = [
+  { type: 'train', name: '开火车(3灯)', count: 3, weight: 22 },
+  { type: 'train', name: '开火车(4灯)', count: 4, weight: 16 },
+  { type: 'train', name: '开火车(5灯)', count: 5, weight: 10 },
+  { type: 'fixed', name: '小三元', targets: [8, 14, 20], weight: 15 },
+  { type: 'fixed', name: '大三元', targets: [7, 15, 19], weight: 8 },
+  { type: 'fixed', name: '小四喜', targets: [11, 5, 17, 23], weight: 12 },
+  { type: 'fixed', name: '大四喜', targets: [0, 4, 6, 1], weight: 7 },
+  { type: 'scatter', name: '满天飞雨(4灯)', count: 4, weight: 14 },
+  { type: 'bar_strike', name: '送大BAR', target: 3, weight: 5 },
+  { type: 'grand_slam', name: '大满贯(全盘奖)', weight: 3 }
+];
+const LUCK_TOTAL_WEIGHT = LUCK_EVENTS.reduce((s, e) => s + e.weight, 0);
+
+function pickTarget() {
+  let r = Math.random() * TOTAL_WEIGHT;
+  for (let fi = 0; fi < SYM_N; fi++) {
+    r -= SYMS[fi].weight;
+    if (r <= 0) {
+      const cands = [];
+      for (let li = 0; li < LAMP_N; li++) {
+        if (LAMPS[li] === fi) cands.push(li);
+      }
+      return cands[Math.floor(Math.random() * cands.length)];
+    }
+  }
+  return 0;
+}
+
+function pickLuckEvent() {
+  let r = Math.random() * LUCK_TOTAL_WEIGHT;
+  for (const ev of LUCK_EVENTS) {
+    r -= ev.weight;
+    if (r <= 0) return ev;
+  }
+  return LUCK_EVENTS[0];
+}
+
+let audioCtx = null;
+function getAc() {
+  if (!audioCtx) {
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtor) audioCtx = new AudioCtor();
+  }
+  return audioCtx;
+}
+
+function sndOsc(freq, duration, type = 'sine', gainVal = 0.2) {
+  if (S.muted) return;
+  const ctx = getAc(); if (!ctx) return;
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator(), gain = ctx.createGain();
+  osc.type = type; osc.frequency.setValueAtTime(freq, now);
+  gain.gain.setValueAtTime(gainVal, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(now); osc.stop(now + duration);
+}
+function sndTick() { sndOsc(1200, 0.04, 'triangle', 0.12); }
+function sndThud() { sndOsc(160, 0.14, 'square', 0.15); }
+function sndClick() { sndOsc(900, 0.03, 'sine', 0.1); }
+function sndCoin() {
+  if (S.muted) return;
+  const ctx = getAc(); if (!ctx) return;
+  const now = ctx.currentTime;
+  [987.77, 1318.5].forEach((f, i) => {
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = 'triangle'; osc.frequency.setValueAtTime(f, now + i * 0.06);
+    g.gain.setValueAtTime(0.2, now + i * 0.06);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.06 + 0.22);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(now + i * 0.06); osc.stop(now + i * 0.06 + 0.22);
+  });
+}
+function sndWin(big = false) {
+  if (S.muted) return;
+  const notes = big ? [523, 659, 784, 1046, 1318] : [523, 659, 784, 1046];
+  notes.forEach((n, i) => setTimeout(() => sndOsc(n, 0.2, 'sine', 0.22), i * 90));
+}
+function sndSiren() {
+  if (S.muted) return;
+  const ctx = getAc(); if (!ctx) return;
+  const now = ctx.currentTime;
+  for (let i = 0; i < 4; i++) {
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(800, now + i * 0.18);
+    osc.frequency.linearRampToValueAtTime(1400, now + i * 0.18 + 0.15);
+    g.gain.setValueAtTime(0.18, now + i * 0.18);
+    g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.18 + 0.17);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(now + i * 0.18); osc.stop(now + i * 0.18 + 0.18);
+  }
+}
+function sndTrain(step = 0) {
+  if (S.muted) return;
+  const ctx = getAc(); if (!ctx) return;
+  const now = ctx.currentTime;
+  [1046.5, 1318.5].forEach(f => {
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(f, now);
+    g.gain.setValueAtTime(0.16, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(now); osc.stop(now + 0.35);
+  });
+}
+function sndGunshot() { sndOsc(260, 0.09, 'square', 0.25); sndOsc(70, 0.2, 'sawtooth', 0.3); }
+function sndFanfare() {
+  if (S.muted) return;
+  [523, 659, 784, 1046, 784, 1046, 1318].forEach((f, i) => {
+    setTimeout(() => sndOsc(f, 0.25, 'triangle', 0.22), i * 110);
+  });
+}
+
+const CHIPS = [1, 5, 10, 50, 100, 500];
+const BET_CAP = 9999;
+const S = { credits: 1000, bets: new Array(PARENT_N).fill(0), chip: 10, muted: false, spinning: false };
+let pendingWin = 0;
+
+try {
+  const saved = JSON.parse(localStorage.getItem('fruit_neo_state') || '{}');
+  if (typeof saved.credits === 'number') S.credits = saved.credits;
+  if (typeof saved.pendingWin === 'number') pendingWin = saved.pendingWin;
+  if (Array.isArray(saved.bets) && saved.bets.length === PARENT_N) S.bets = saved.bets;
+} catch (e) {}
+
+function saveState() {
+  try {
+    localStorage.setItem('fruit_neo_state', JSON.stringify({
+      credits: S.credits, pendingWin: pendingWin, bets: S.bets
+    }));
+  } catch (e) {}
+}
+
+const totalBet = () => S.bets.reduce((a, b) => a + b, 0);
+const isBusy = () => S.spinning;
+
+const wheel = {
+  pos: 0, speed: 0, phase: "idle", target: 0, targetFruit: 0,
+  luckEvent: null, luckWonLamps: [], luckStep: 0, luckTimer: 0,
+  trainStart: 0, trainPhase: "run", trainLamps: [], t: 0
+};
+
+const lightOf = (idx) => ((Math.round(idx) % LAMP_N) + LAMP_N) % LAMP_N;
+
+function startLuckMode() {
+  const ev = pickLuckEvent();
+  wheel.luckEvent = ev;
+  wheel.luckWonLamps = [];
+  wheel.luckStep = 0;
+  wheel.luckTimer = 0;
+
+  if (ev.type === "train") {
+    let start = Math.floor(Math.random() * LAMP_N);
+    while (SYMS[LAMPS[start]].luck) start = (start + 1) % LAMP_N;
+    wheel.trainStart = start;
+    wheel.trainPhase = "run";
+    const trainLamps = [];
+    let cur = start;
+    while (trainLamps.length < ev.count) {
+      if (!SYMS[LAMPS[cur]].luck) trainLamps.push(cur);
+      cur = (cur + 1) % LAMP_N;
+    }
+    wheel.trainLamps = trainLamps;
+  }
+  wheel.phase = "luck_intro";
+  wheel.t = 0;
+  sndSiren();
+  showToast(`⚡ 停在 ${SYMS[wheel.targetFruit].name} · 触发【${ev.name}】！`);
+}
+
+function updateLuckEngine(dt) {
+  const ev = wheel.luckEvent;
+  if (!ev) { wheel.phase = "idle"; return; }
+  wheel.luckTimer += dt;
+
+  switch (ev.type) {
+    case "train": {
+      if (wheel.trainPhase === "run") {
+        wheel.pos += 26 * dt;
+        if (Math.floor(wheel.pos) % 2 === 0) sndTick();
+        if (wheel.luckTimer >= 1.1) {
+          wheel.pos = wheel.trainStart;
+          wheel.trainPhase = "expand";
+          wheel.luckTimer = 0;
+          wheel.luckStep = 0;
+          sndTrain(0);
+        }
+      } else {
+        if (wheel.luckTimer >= 0.35) {
+          wheel.luckTimer = 0;
+          if (wheel.luckStep < wheel.trainLamps.length) {
+            const nextLamp = wheel.trainLamps[wheel.luckStep];
+            wheel.luckWonLamps.push(nextLamp);
+            wheel.pos = nextLamp;
+            sndTrain(wheel.luckStep + 1);
+            wheel.luckStep++;
+          } else {
+            wheel.phase = "luck_blink";
+            wheel.t = 0;
+          }
+        }
+      }
+      break;
+    }
+    case "fixed": {
+      if (wheel.luckTimer >= 0.45) {
+        wheel.luckTimer = 0;
+        if (wheel.luckStep < ev.targets.length) {
+          const lampIdx = ev.targets[wheel.luckStep];
+          wheel.luckWonLamps.push(lampIdx);
+          wheel.pos = lampIdx;
+          sndOsc(540 + wheel.luckStep * 140, 0.22, "triangle", 0.2);
+          wheel.luckStep++;
+        } else {
+          wheel.phase = "luck_blink";
+          wheel.t = 0;
+        }
+      }
+      break;
+    }
+    case "scatter": {
+      if (wheel.luckTimer >= 0.38) {
+        wheel.luckTimer = 0;
+        if (wheel.luckStep < ev.count) {
+          const cands = [];
+          for (let i = 0; i < LAMP_N; i++) {
+            if (!SYMS[LAMPS[i]].luck && !wheel.luckWonLamps.includes(i)) cands.push(i);
+          }
+          const chosen = cands[Math.floor(Math.random() * cands.length)] ?? 0;
+          wheel.luckWonLamps.push(chosen);
+          wheel.pos = chosen;
+          sndGunshot();
+          wheel.luckStep++;
+        } else {
+          wheel.phase = "luck_blink";
+          wheel.t = 0;
+        }
+      }
+      break;
+    }
+    case "bar_strike": {
+      if (wheel.luckTimer >= 0.22) {
+        wheel.luckTimer = 0;
+        const cur = lightOf(wheel.pos);
+        if (cur !== ev.target) {
+          wheel.pos = (cur + 1) % LAMP_N;
+          sndTick();
+        } else {
+          wheel.luckWonLamps = [ev.target];
+          wheel.phase = "luck_blink";
+          wheel.t = 0;
+        }
+      }
+      break;
+    }
+    case "grand_slam": {
+      wheel.pos += 30 * dt;
+      if (Math.floor(wheel.pos) % 2 === 0) sndTick();
+      if (wheel.luckTimer >= 2.2) {
+        wheel.luckWonLamps = Array.from({length: LAMP_N}, (_, i) => i);
+        wheel.phase = "luck_blink";
+        wheel.t = 0;
+      }
+      break;
+    }
+  }
+}
+
+function updateWheel(dt) {
+  wheel.t += dt;
+  const lastLit = lightOf(wheel.pos);
+
+  switch (wheel.phase) {
+    case "accel": {
+      wheel.speed = Math.min(32, wheel.speed + 46 * dt);
+      wheel.pos += wheel.speed * dt;
+      if (wheel.t > 0.8) { wheel.phase = "cruise"; wheel.t = 0; }
+      break;
+    }
+    case "cruise": {
+      wheel.pos += wheel.speed * dt;
+      if (wheel.t > 1.2) {
+        wheel.phase = "decel"; wheel.t = 0;
+        const currentLit = lightOf(wheel.pos);
+        const dist = ((wheel.target - currentLit) % LAMP_N + LAMP_N) % LAMP_N;
+        wheel.decelStartPos = wheel.pos;
+        wheel.decelTotal = LAMP_N * 2 + dist;
+        wheel.decelDuration = 2.4;
+      }
+      break;
+    }
+    case "decel": {
+      const p = Math.min(1, wheel.t / wheel.decelDuration);
+      const ease = 1 - Math.pow(1 - p, 3);
+      wheel.pos = wheel.decelStartPos + wheel.decelTotal * ease;
+      if (p >= 1) {
+        wheel.pos = wheel.target;
+        wheel.speed = 0;
+        if (SYMS[wheel.targetFruit]?.luck) startLuckMode();
+        else { wheel.phase = "blink"; wheel.t = 0; }
+      }
+      break;
+    }
+    case "blink": {
+      if (wheel.t > 1.4) {
+        wheel.phase = "idle";
+        resolveRound();
+      }
+      break;
+    }
+    case "luck_intro": {
+      if (wheel.t > 0.8) {
+        wheel.phase = "luck_anim"; wheel.t = 0; wheel.luckTimer = 0;
+      }
+      break;
+    }
+    case "luck_anim": { updateLuckEngine(dt); break; }
+    case "luck_blink": {
+      if (wheel.t > 1.8) {
+        wheel.phase = "idle";
+        resolveLuckRound();
+      }
+      break;
+    }
+  }
+
+  if (wheel.phase !== "idle" && wheel.phase !== "blink" && wheel.phase !== "luck_blink") {
+    const curLit = lightOf(wheel.pos);
+    if (curLit !== lastLit) sndTick();
+  }
+}
+
+const wCanvas = document.getElementById("wheelCanvas");
+const wctx = wCanvas.getContext("2d");
+let W = 0;
+
+function resizeWheel() {
+  const arena = document.getElementById("wheelArena");
+  const wrapper = document.getElementById("wheelWrapper");
+  if (!arena || !wrapper) return;
+  const dpr = window.devicePixelRatio || 1;
+  const size = Math.floor(Math.min(arena.clientWidth - 16, arena.clientHeight - 16));
+  if (size <= 0) return;
+
+  // 严格绑定 wrapper 为正方形，与 Canvas / 核心按键 / 准星 保持 100% 绝对同心同轴
+  wrapper.style.width = size + "px";
+  wrapper.style.height = size + "px";
+
+  W = size * dpr;
+  wCanvas.width = W;
+  wCanvas.height = W;
+  wCanvas.style.width = size + "px";
+  wCanvas.style.height = size + "px";
+}
+
+function drawWheel(now) {
+  if (W === 0) return;
+  const c = wctx, cx = W / 2, cy = W / 2, R = W / 2 - 8;
+  c.clearRect(0, 0, W, W);
+
+  // 1. 外钛合金装甲环
+  let g = c.createLinearGradient(cx - R, cy - R, cx + R, cy + R);
+  g.addColorStop(0, "#2d3748"); g.addColorStop(0.5, "#1a202c"); g.addColorStop(1, "#0f172a");
+  c.beginPath(); c.arc(cx, cy, R, 0, Math.PI * 2);
+  c.fillStyle = g; c.fill();
+  c.lineWidth = Math.max(1, R * 0.012); c.strokeStyle = "rgba(255,255,255,0.18)"; c.stroke();
+
+  // 2. 轮盘暗黑磨砂底盘
+  g = c.createRadialGradient(cx, cy, R * 0.2, cx, cy, R * 0.94);
+  g.addColorStop(0, "#111827"); g.addColorStop(0.6, "#090d16"); g.addColorStop(1, "#04060a");
+  c.beginPath(); c.arc(cx, cy, R * 0.94, 0, Math.PI * 2);
+  c.fillStyle = g; c.fill();
+
+  // 3. 激光分隔导轨
+  c.lineWidth = Math.max(1, R * 0.008);
+  c.strokeStyle = "rgba(6, 182, 212, 0.35)";
+  c.beginPath(); c.arc(cx, cy, R * 0.88, 0, Math.PI * 2); c.stroke();
+  c.beginPath(); c.arc(cx, cy, R * 0.60, 0, Math.PI * 2); c.stroke();
+
+  // 4. 中奖彩光扇区
+  if ((wheel.phase === "blink" || wheel.phase === "luck_blink") && Math.floor(now / 130) % 2 === 0) {
+    const wonSpots = wheel.phase === "luck_blink" ? (wheel.luckWonLamps || []) : [wheel.target];
+    c.save(); c.globalAlpha = 0.25;
+    for (const spot of wonSpots) {
+      const fi = LAMPS[spot], F = SYMS[fi];
+      if (F && F.p >= 0) {
+        c.fillStyle = PARENTS[F.p].color;
+        const a = -Math.PI / 2 + spot * (Math.PI * 2 / LAMP_N);
+        c.beginPath(); c.moveTo(cx, cy);
+        c.arc(cx, cy, R * 0.94, a - Math.PI / LAMP_N, a + Math.PI / LAMP_N); c.fill();
+      }
+    }
+    c.restore();
+  }
+
+  const step = Math.PI * 2 / LAMP_N;
+  const lit = lightOf(wheel.pos);
+  const isLuckActive = wheel.phase === "luck_anim" || wheel.phase === "luck_blink";
+  const isWonLamp = (idx) => wheel.luckWonLamps && wheel.luckWonLamps.includes(idx);
+
+  for (let i = 0; i < LAMP_N; i++) {
+    const a = -Math.PI / 2 + i * step;
+    const ca = Math.cos(a), sa = Math.sin(a);
+    const fi = LAMPS[i], F = SYMS[fi];
+
+    const isLit = (!isLuckActive && i === lit && wheel.phase !== "blink") ||
+                  (isLuckActive && (i === lit || isWonLamp(i)));
+    const isTrail = (!isLuckActive && wheel.phase !== "blink") &&
+                    (i === lightOf(lit - 1) || i === lightOf(lit - 2));
+    const isWin = (wheel.phase === "blink" && i === wheel.target && Math.floor(now / 130) % 2 === 0) ||
+                  (wheel.phase === "luck_blink" && isWonLamp(i) && Math.floor(now / 130) % 2 === 0);
+
+    // Neo-Pixel 独立光珠 (半径 0.88R)
+    const lx = cx + ca * R * 0.88, ly = cy + sa * R * 0.88, lr = R * 0.034;
+    if (isLit || isWin) {
+      c.save();
+      c.shadowColor = "#38bdf8"; c.shadowBlur = R * 0.12;
+      g = c.createRadialGradient(lx - lr * 0.3, ly - lr * 0.35, lr * 0.1, lx, ly, lr);
+      g.addColorStop(0, "#ffffff"); g.addColorStop(0.5, "#38bdf8"); g.addColorStop(1, "#0284c7");
+      c.fillStyle = g;
+      c.beginPath(); c.arc(lx, ly, lr, 0, Math.PI * 2); c.fill();
+      c.restore();
+    } else if (isTrail) {
+      c.save(); c.globalAlpha = 0.45;
+      g = c.createRadialGradient(lx, ly, lr * 0.1, lx, ly, lr);
+      g.addColorStop(0, "#38bdf8"); g.addColorStop(1, "#0f172a");
+      c.fillStyle = g;
+      c.beginPath(); c.arc(lx, ly, lr * 0.85, 0, Math.PI * 2); c.fill();
+      c.restore();
+    } else {
+      g = c.createRadialGradient(lx - lr * 0.2, ly - lr * 0.2, lr * 0.1, lx, ly, lr);
+      g.addColorStop(0, "#334155"); g.addColorStop(1, "#0f172a");
+      c.fillStyle = g;
+      c.beginPath(); c.arc(lx, ly, lr * 0.82, 0, Math.PI * 2); c.fill();
+    }
+
+    // 水果图标 (半径 0.70R)
+    const ex = cx + ca * R * 0.70, ey = cy + sa * R * 0.70;
+    const img = IMGS[F.imgKey];
+
+    if (isLit || isWin) {
+      c.save();
+      const hg = c.createRadialGradient(ex, ey, 1, ex, ey, R * 0.12);
+      hg.addColorStop(0, "rgba(6, 182, 212, 0.45)");
+      hg.addColorStop(1, "rgba(6, 182, 212, 0)");
+      c.fillStyle = hg;
+      c.beginPath(); c.arc(ex, ey, R * 0.12, 0, Math.PI * 2); c.fill();
+      c.restore();
+    }
+
+    if (img && img.complete && img.naturalWidth > 0) {
+      c.save();
+      if (F.luck) {
+        const iw = R * 0.13, ih = iw * (img.naturalHeight / img.naturalWidth);
+        c.drawImage(img, ex - iw / 2, ey - ih / 2, iw, ih);
+      } else if (F.bar) {
+        const bw = R * (F.bar === 2 ? 0.17 : 0.14), bh = bw * (img.naturalHeight / img.naturalWidth);
+        c.filter = "drop-shadow(0 0 5px rgba(255,255,255,0.8)) brightness(2.6)";
+        c.drawImage(img, ex - bw / 2, ey - bh / 2, bw, bh);
+      } else {
+        const scale = F.small ? 0.088 : 0.13;
+        const sw = R * scale, sh = sw * (img.naturalHeight / img.naturalWidth);
+        c.drawImage(img, ex - sw / 2, ey - sh / 2, sw, sh);
+      }
+      c.restore();
+    } else {
+      c.font = `bold ${Math.floor(R * 0.05)}px sans-serif`;
+      c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle";
+      c.fillText(F.name, ex, ey);
+    }
+
+    // 发光赔率标识 (半径 0.52R，彻底与水果和核心按键分开)
+    const ox = cx + ca * R * 0.52, oy = cy + sa * R * 0.52;
+    const label = F.luck ? "LUCK" : String(F.odds);
+    c.font = `900 ${Math.floor(R * 0.040)}px "Courier New", monospace`;
+    c.textAlign = "center"; c.textBaseline = "middle";
+    c.fillStyle = (isLit || isWin) ? "#38bdf8" : (F.luck ? "#f59e0b" : "#64748b");
+    c.fillText(label, ox, oy);
+  }
+}
+
+const fxCanvas = document.getElementById("fxCanvas");
+const fxCtx = fxCanvas.getContext("2d");
+let particles = [];
+
+function resizeFx() {
+  fxCanvas.width = window.innerWidth;
+  fxCanvas.height = window.innerHeight;
+}
+
+function spawnCoins(x, y, count = 40) {
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const sp = 4 + Math.random() * 12;
+    particles.push({
+      x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 6,
+      g: 0.35, r: 4 + Math.random() * 6,
+      color: Math.random() > 0.3 ? "#facc15" : "#38bdf8",
+      life: 1, decay: 0.012 + Math.random() * 0.015
+    });
+  }
+}
+
+function updateFx(dt) {
+  fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += p.g; p.life -= p.decay;
+    if (p.life <= 0) { particles.splice(i, 1); continue; }
+    fxCtx.save();
+    fxCtx.globalAlpha = p.life;
+    fxCtx.fillStyle = p.color;
+    fxCtx.shadowColor = p.color; fxCtx.shadowBlur = 8;
+    fxCtx.beginPath(); fxCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2); fxCtx.fill();
+    fxCtx.restore();
+  }
+}
+
+let needResetBets = totalBet() > 0;
+
+function placeBet(pi) {
+  if (isBusy()) return;
+  collectPending();
+  // 若上一局已结算且玩家开始重新下注，先全盘归零，再行落注
+  if (needResetBets) {
+    S.bets.fill(0);
+    needResetBets = false;
+  }
+  if (S.credits - totalBet() < S.chip) {
+    showToast("可用余额不足，请先上分");
+    sndThud(); return;
+  }
+  S.bets[pi] = Math.min(BET_CAP, S.bets[pi] + S.chip);
+  sndClick();
+  const el = document.getElementById("betCard" + pi);
+  if (el) {
+    const r = el.getBoundingClientRect();
+    spawnCoins(r.left + r.width / 2, r.top + r.height / 2, 8);
+  }
+  renderUI();
+}
+
+function collectPending() {
+  if (pendingWin > 0) {
+    S.credits += pendingWin;
+    pendingWin = 0;
+    sndCoin();
+    saveState();
+  }
+  document.getElementById("diceOverlay").classList.remove("show");
+}
+
+function spin() {
+  if (isBusy()) return;
+  if (pendingWin > 0) {
+    collectPending();
+    renderUI();
+    showToast("奖金已收回余额 · 再次点击开局");
+    return;
+  }
+  // 直接按“开始”按键：不归零，继续延续上一局的下注开局
+  needResetBets = false;
+  const tb = totalBet();
+  if (tb === 0) { showToast("请先选择项目下注"); sndThud(); return; }
+  if (tb > S.credits) { showToast("余额不足，请先充值分数"); sndThud(); return; }
+
+  S.credits -= tb; saveState(); S.spinning = true;
+  wheel.luckWonLamps = []; wheel.luckEvent = null;
+  wheel.target = pickTarget(); wheel.targetFruit = LAMPS[wheel.target];
+  wheel.phase = "accel"; wheel.t = 0; wheel.speed = 0;
+  renderUI();
+}
+
+function resolveRound() {
+  S.spinning = false;
+  needResetBets = true; // 本局结算完毕：下次点水果下注则清零，直接按开始则复押
+  const fi = wheel.targetFruit, F = SYMS[fi];
+  const win = S.bets[F.p] * F.odds;
+
+  recordHistory(`${F.name} ×${F.odds}`, win, false, F.imgKey);
+
+  if (win > 0) {
+    pendingWin = win; saveState();
+    const isBigWin = win >= totalBet() * 8 || win >= 500;
+    sndWin(isBigWin);
+    if (isBigWin) {
+      document.getElementById("bwAmountText").textContent = `+${win.toLocaleString()} CREDITS`;
+      document.getElementById("bigWinBanner").classList.add("show");
+      setTimeout(() => document.getElementById("bigWinBanner").classList.remove("show"), 2800);
+      spawnCoins(window.innerWidth / 2, window.innerHeight / 2, 80);
+      document.getElementById("appViewport").classList.add("shake");
+      setTimeout(() => document.getElementById("appViewport").classList.remove("shake"), 500);
+    }
+    showToast(`喜中 ${F.name} ×${F.odds}！赢得 ${win.toLocaleString()} 分`);
+  } else {
+    sndThud(); showToast(`${F.name} ×${F.odds} · 未中`);
+  }
+  renderUI();
+}
+
+function resolveLuckRound() {
+  S.spinning = false;
+  needResetBets = true; // 本局结算完毕：下次点水果下注则清零，直接按开始则复押
+  const ev = wheel.luckEvent;
+  if (!ev) { renderUI(); return; }
+
+  let totalWin = 0;
+  if (ev.type === "grand_slam") {
+    for (let pi = 0; pi < PARENT_N; pi++) {
+      const b = S.bets[pi];
+      if (b > 0) totalWin += b * ODDS_RANGE[pi].max;
+    }
+    if (totalWin === 0) totalWin = 888;
+  } else {
+    wheel.luckWonLamps.forEach(idx => {
+      const fi = LAMPS[idx], F = SYMS[fi];
+      if (F && F.p >= 0) totalWin += S.bets[F.p] * F.odds;
+    });
+  }
+
+  recordHistory(`LUCK·${ev.name}`, totalWin, true, "ingots");
+
+  if (totalWin > 0) {
+    pendingWin = totalWin; saveState(); sndWin(true); sndFanfare();
+    document.getElementById("bwAmountText").textContent = `+${totalWin.toLocaleString()} CREDITS`;
+    document.getElementById("bigWinBanner").classList.add("show");
+    setTimeout(() => document.getElementById("bigWinBanner").classList.remove("show"), 3200);
+    spawnCoins(window.innerWidth / 2, window.innerHeight / 2, 100);
+    document.getElementById("appViewport").classList.add("shake");
+    setTimeout(() => document.getElementById("appViewport").classList.remove("shake"), 600);
+    showToast(`🎉【${ev.name}】大爆发！赢得 ${totalWin.toLocaleString()} 分`);
+  } else {
+    sndThud(); showToast(`🎰【${ev.name}】未押中本轮送出的果实`);
+  }
+  renderUI();
+}
+
+let gambleTimer = 0;
+function gambleDice(isBigChoice) {
+  if (isBusy() || pendingWin <= 0) return;
+  const overlay = document.getElementById("diceOverlay");
+  const dFaces = document.getElementById("diceFaces");
+  const dResult = document.getElementById("diceResult");
+  overlay.classList.add("show");
+
+  let rollCount = 0;
+  clearTimeout(gambleTimer);
+  const iv = setInterval(() => {
+    rollCount++;
+    const r1 = Math.floor(Math.random() * 6) + 1;
+    const r2 = Math.floor(Math.random() * 6) + 1;
+    dFaces.textContent = ["⚀","⚁","⚂","⚃","⚄","⚅"][r1 - 1] + " " + ["⚀","⚁","⚂","⚃","⚄","⚅"][r2 - 1];
+    sndTick();
+
+    if (rollCount >= 10) {
+      clearInterval(iv);
+      const sum = r1 + r2;
+      const isBigWin = sum >= 7;
+      const hit = (isBigChoice && isBigWin) || (!isBigChoice && !isBigWin);
+      dResult.textContent = `${sum} 点 · ${isBigWin ? "大" : "小"} (${hit ? "猜中翻倍" : "未猜中"})`;
+
+      if (hit) {
+        pendingWin *= 2; sndWin(false); saveState();
+        showToast(`比倍成功！奖池翻倍至 ${pendingWin.toLocaleString()} 分`);
+      } else {
+        pendingWin = 0; sndThud(); saveState();
+        showToast("比倍失败，本轮奖金归零");
+      }
+      renderUI();
+      gambleTimer = setTimeout(() => overlay.classList.remove("show"), 2000);
+    }
+  }, 70);
+}
+
+let historyList = [];
+try {
+  historyList = JSON.parse(localStorage.getItem("fruit_neo_history") || "[]");
+  if (!Array.isArray(historyList)) historyList = [];
+} catch (e) {}
+
+function recordHistory(symbolName, winAmount, isLuck = false, imgKey = "") {
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
+  historyList.unshift({
+    time: timeStr, symbol: symbolName, imgKey: imgKey,
+    isLuck: isLuck, bet: totalBet(), win: winAmount,
+    credits: S.credits + (winAmount > 0 ? winAmount : 0)
+  });
+  if (historyList.length > 100) historyList.pop();
+  try { localStorage.setItem("fruit_neo_history", JSON.stringify(historyList)); } catch (e) {}
+}
+
+function renderHistoryModal() {
+  const tbody = document.getElementById("histRows");
+  const emptyTip = document.getElementById("histEmptyTip");
+  tbody.innerHTML = "";
+
+  const total = historyList.length;
+  if (total === 0) {
+    emptyTip.style.display = "block";
+    document.getElementById("histRounds").textContent = "0";
+    document.getElementById("histRate").textContent = "0%";
+    document.getElementById("histTopWin").textContent = "0";
+    document.getElementById("histCredit").textContent = S.credits.toLocaleString();
+    return;
+  }
+  emptyTip.style.display = "none";
+
+  let wins = 0, maxWin = 0;
+  historyList.forEach(h => {
+    if (h.win > 0) wins++;
+    if (h.win > maxWin) maxWin = h.win;
+
+    const tr = document.createElement("tr");
+    const badgeCls = h.isLuck ? "luck" : (h.win > 0 ? "win" : "loss");
+    const badgeText = h.isLuck ? "LUCK" : (h.win > 0 ? "中奖" : "未中");
+    const winHtml = h.win > 0
+      ? `<span class="txtWin">+${h.win.toLocaleString()}</span>`
+      : `<span class="txtLoss">0</span>`;
+
+    const img = IMGS[h.imgKey];
+    const iconHtml = (img && img.src)
+      ? `<img src="${img.src}" style="width:2.2vh;height:2.2vh;vertical-align:middle;object-fit:contain;margin-right:0.3vw;">`
+      : "";
+
+    tr.innerHTML = `
+      <td>${h.time}</td>
+      <td><span class="badgeTag ${badgeCls}">${badgeText}</span>${iconHtml}${h.symbol}</td>
+      <td>${h.bet.toLocaleString()}</td>
+      <td>${winHtml}</td>
+      <td>${h.credits.toLocaleString()}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("histRounds").textContent = total;
+  document.getElementById("histRate").textContent = Math.round((wins / total) * 100) + "%";
+  document.getElementById("histTopWin").textContent = maxWin.toLocaleString();
+  document.getElementById("histCredit").textContent = S.credits.toLocaleString();
+}
+
+let displayedCredit = S.credits, displayedWin = 0;
+function renderUI() {
+  for (let pi = 0; pi < PARENT_N; pi++) {
+    const card = document.getElementById("betCard" + pi);
+    if (card) {
+      card.classList.toggle("hasBet", S.bets[pi] > 0);
+      const isNormalWin = SYMS[wheel.targetFruit]?.p === pi && pendingWin > 0 && !S.spinning;
+      const isLuckWin = pendingWin > 0 && !S.spinning && wheel.luckWonLamps && wheel.luckWonLamps.some(li => SYMS[LAMPS[li]]?.p === pi);
+      card.classList.toggle("winPulse", isNormalWin || isLuckWin);
+
+      const badge = card.querySelector(".cardBetBadge");
+      if (S.bets[pi] > 0) {
+        badge.style.display = "flex";
+        badge.textContent = S.bets[pi];
+      } else {
+        badge.style.display = "none";
+      }
+    }
+  }
+
+  document.getElementById("meterBet").textContent = totalBet().toLocaleString();
+  const b = isBusy();
+  const collectMode = pendingWin > 0;
+
+  const btnGo = document.getElementById("btnGo");
+  const btnDeckSpin = document.getElementById("btnDeckSpin");
+  btnGo.innerHTML = collectMode ? "TAKE<small>收 分</small>" : "SPIN<small>开 始</small>";
+  btnDeckSpin.textContent = collectMode ? "收 分" : "开 始";
+  btnGo.disabled = b; btnDeckSpin.disabled = b;
+  btnGo.classList.toggle("ready", !b && (totalBet() > 0 || pendingWin > 0));
+
+  const canGamble = !b && pendingWin > 0;
+  document.getElementById("btnGambleBig").disabled = !canGamble;
+  document.getElementById("btnGambleSmall").disabled = !canGamble;
+  document.getElementById("btnGambleBig").classList.toggle("ready", canGamble);
+  document.getElementById("btnGambleSmall").classList.toggle("ready", canGamble);
+  document.getElementById("btnTransferIn").disabled = !(canGamble && S.credits > 0);
+  document.getElementById("btnTransferOut").disabled = !(canGamble && pendingWin >= 2);
+  document.getElementById("meterWinBox").classList.toggle("pulse", pendingWin > 0);
+}
+
+function updateNumericMeters(dt) {
+  displayedCredit += (S.credits - displayedCredit) * Math.min(1, dt * 8);
+  displayedWin += (pendingWin - displayedWin) * Math.min(1, dt * 8);
+  document.getElementById("meterCredit").textContent = Math.round(displayedCredit).toLocaleString();
+  document.getElementById("meterWin").textContent = Math.round(displayedWin).toLocaleString();
+}
+
+let toastTimer = 0;
+function showToast(msg) {
+  const t = document.getElementById("toastBox");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+function bindFastTap(el, fn) {
+  let iv = 0, to = 0;
+  const start = e => {
+    e.preventDefault(); fn();
+    to = setTimeout(() => { iv = setInterval(fn, 110); }, 380);
+  };
+  const stop = () => { clearTimeout(to); clearInterval(iv); };
+  el.addEventListener("pointerdown", start);
+  el.addEventListener("pointerup", stop);
+  el.addEventListener("pointercancel", stop);
+  el.addEventListener("pointerleave", stop);
+}
+
+function initControls() {
+  const chipsDock = document.getElementById("chipsDock");
+  CHIPS.forEach(v => {
+    const chip = document.createElement("button");
+    chip.className = "neoChip" + (v === S.chip ? " sel" : "");
+    chip.textContent = v;
+    chip.onclick = () => {
+      S.chip = v; sndClick();
+      document.querySelectorAll(".neoChip").forEach(c => c.classList.toggle("sel", c === chip));
+    };
+    chipsDock.appendChild(chip);
+  });
+
+  const tilesDock = document.getElementById("betTiles");
+  PARENTS.forEach((P, pi) => {
+    const card = document.createElement("div");
+    card.className = "betCard"; card.id = "betCard" + pi;
+    const rng = ODDS_RANGE[pi];
+    const oddsTxt = rng.min === rng.max ? `×${rng.min}` : `×${rng.min}~${rng.max}`;
+    const img = IMGS[P.imgKey];
+    const isBar = P.bar === true;
+    const iconContent = (img && img.src)
+      ? `<img class="cardIconImg ${isBar ? 'barImg' : ''}" src="${img.src}" alt="${P.name}">`
+      : `<span style="font-size:3.5vh;">${P.name}</span>`;
+
+    card.innerHTML = `
+      <div class="cardBetBadge">0</div>
+      <div class="cardIconBox">${iconContent}</div>
+      <div class="cardName">${P.name}</div>
+      <div class="cardOdds">${oddsTxt}</div>
+    `;
+    bindFastTap(card, () => placeBet(pi));
+    tilesDock.appendChild(card);
+  });
+
+  document.getElementById("btnGo").onclick = spin;
+  document.getElementById("btnDeckSpin").onclick = spin;
+
+  document.getElementById("btnGambleBig").onclick = () => gambleDice(true);
+  document.getElementById("btnGambleSmall").onclick = () => gambleDice(false);
+
+  document.getElementById("btnTransferIn").onclick = () => {
+    if (isBusy() || pendingWin <= 0) return;
+    const amt = Math.min(S.credits, pendingWin);
+    if (amt <= 0) return;
+    S.credits -= amt; pendingWin += amt;
+    saveState(); sndCoin();
+    showToast(`已向奖池注入 ${amt.toLocaleString()} 分`);
+    renderUI();
+  };
+
+  document.getElementById("btnTransferOut").onclick = () => {
+    if (isBusy() || pendingWin < 2) return;
+    const amt = Math.floor(pendingWin / 2);
+    pendingWin -= amt; S.credits += amt;
+    saveState(); sndCoin();
+    showToast(`已划回余额 ${amt.toLocaleString()} 分`);
+    renderUI();
+  };
+
+  document.getElementById("btnDeposit").onclick = () => {
+    S.credits += 1000; saveState(); sndCoin();
+    showToast("充值 1,000 分成功"); renderUI();
+  };
+  document.getElementById("btnWithdraw").onclick = () => {
+    if (isBusy()) return;
+    collectPending(); S.credits = 0; saveState(); sndCoin();
+    showToast("已清空结算"); renderUI();
+  };
+  document.getElementById("btnResetBets").onclick = () => {
+    if (isBusy()) return;
+    collectPending(); S.bets.fill(0); needResetBets = false; sndClick(); renderUI();
+  };
+
+  document.getElementById("btnAudioToggle").onclick = () => {
+    S.muted = !S.muted;
+    document.getElementById("btnAudioToggle").textContent = S.muted ? "🔇 静音" : "🔊 音效";
+  };
+  document.getElementById("btnFullscreen").onclick = () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen?.().catch(() => {});
+  };
+
+  document.getElementById("btnHistModal").onclick = () => {
+    renderHistoryModal();
+    document.getElementById("historyModal").classList.add("show");
+    sndClick();
+  };
+  document.getElementById("btnCloseHist").onclick = () => {
+    document.getElementById("historyModal").classList.remove("show");
+    sndClick();
+  };
+  document.getElementById("historyModal").onclick = e => {
+    if (e.target === document.getElementById("historyModal")) {
+      document.getElementById("historyModal").classList.remove("show");
+    }
+  };
+  document.getElementById("btnClearHist").onclick = () => {
+    if (historyList.length === 0) return;
+    historyList = [];
+    try { localStorage.removeItem("fruit_neo_history"); } catch (e) {}
+    renderHistoryModal();
+    showToast("历史记录已清除"); sndClick();
+  };
+}
+
+let lastFrameTime = 0;
+function mainLoop(now) {
+  const dt = Math.min(0.05, (now - lastFrameTime) / 1000 || 0.016);
+  lastFrameTime = now;
+  updateWheel(dt);
+  drawWheel(now);
+  updateFx(dt);
+  updateNumericMeters(dt);
+  requestAnimationFrame(mainLoop);
+}
+
+function handleResize() { resizeWheel(); resizeFx(); }
+
+window.addEventListener("resize", handleResize);
+window.addEventListener("pointerdown", () => {
+  try { getAc().resume(); } catch (e) {}
+}, { once: true });
+
+initControls();
+handleResize();
+renderUI();
+requestAnimationFrame(mainLoop);
+</script>
+</body>
+</html>
