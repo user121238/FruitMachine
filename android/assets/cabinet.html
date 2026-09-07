@@ -19,39 +19,39 @@
 
   /* 竖版机柜外壳 */
   #cabinetFrame {
-    width:100%; height:100%; max-width:540px; max-height:980px;
-    background:#12141a;
+    width:100%; height:100%; max-width:480px; max-height:960px;
+    background:#0d0f15;
     display:flex; flex-direction:column; justify-content:space-between;
-    padding:max(1vh, env(safe-area-inset-top)) 2.4vw max(1vh, env(safe-area-inset-bottom));
-    box-shadow:0 0 50px rgba(0,0,0,0.9), inset 0 0 10px rgba(0,0,0,0.8);
+    padding:max(2vh, calc(env(safe-area-inset-top) + 8px)) max(4vw, 16px) max(3vh, calc(env(safe-area-inset-bottom) + 12px)) max(4vw, 16px);
+    box-shadow:0 0 40px rgba(0,0,0,0.9);
     position:relative; overflow:hidden;
-    border-left:6px solid #b91c1c; border-right:6px solid #b91c1c;
   }
-  #cabinetFrame::before, #cabinetFrame::after {
-    content:""; position:absolute; top:0; bottom:0; width:4px;
-    background:#ef4444; box-shadow:0 0 12px #ef4444; pointer-events:none; z-index:30;
-  }
-  #cabinetFrame::before { left:2px; }
-  #cabinetFrame::after { right:2px; }
 
-  /* 顶部状态与积分栏 */
+  /* 顶部导航与积分栏 */
   #topBar {
     flex:0 0 auto; display:flex; flex-direction:column; gap:0.6vh;
-    padding-bottom:0.6vh;
+    padding-bottom:0.4vh;
   }
-  .playerRow {
+  .topNavRow {
     display:flex; align-items:center; justify-content:space-between;
-    background:rgba(255,255,255,0.06); border-radius:0.8vh; padding:0.4vh 1.4vw;
-    border:1px solid rgba(255,255,255,0.08); font-size:1.4vh; color:#cbd5e1;
+    padding:0.2vh 0;
   }
-  .pCard { display:flex; align-items:center; gap:0.6vw; }
-  .pAvatar { width:3.4vh; height:3.4vh; border-radius:50%; background:#475569; display:flex; align-items:center; justify-content:center; font-size:1.8vh; }
-  .pInfo { display:flex; flex-direction:column; font-size:1.2vh; line-height:1.2; }
-  .pId { color:#e2e8f0; font-weight:800; }
-  .pScore { color:#f59e0b; font-weight:900; }
+  .arcadeLogo {
+    font-size:1.6vh; font-weight:900; letter-spacing:0.06em;
+    color:#94a3b8; text-shadow:0 1px 2px #000;
+  }
+  .topOptGroup {
+    display:flex; gap:1.8vw; align-items:center;
+  }
   .btnTopOpt {
-    padding:0.4vh 1.2vw; background:linear-gradient(180deg, #f59e0b, #d97706);
-    color:#fff; border:none; border-radius:0.6vh; font-size:1.3vh; font-weight:900; cursor:pointer;
+    padding:0.5vh 2.4vw; background:linear-gradient(180deg, #334155, #1e293b);
+    color:#f1f5f9; border:1px solid #475569; border-radius:0.8vh; font-size:1.3vh; font-weight:800; cursor:pointer;
+    box-shadow:0 2px 6px rgba(0,0,0,0.4);
+  }
+  .btnTopOpt:active { transform:scale(0.95); }
+  .btnCoinUp {
+    background:linear-gradient(180deg, #f59e0b, #d97706);
+    border-color:#b45309; color:#fff;
   }
 
   .ledRow {
@@ -128,12 +128,12 @@
     box-shadow:inset 0 0 20px rgba(0,0,0,0.8);
     display:flex; flex-direction:column; justify-content:space-between;
     align-items:center; padding:1.2vh 1.4vw;
-    background:#181224 url('images/char_bg.jpg') no-repeat center 18%;
+    background:#181224 url('images/char_bg.jpg') no-repeat center 12%;
     background-size:cover;
   }
   #centerStage::before {
     content:""; position:absolute; inset:0;
-    background:linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.5) 100%);
+    background:linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.02) 40%, rgba(0,0,0,0.5) 100%);
     pointer-events:none;
   }
 
@@ -149,13 +149,14 @@
   }
 
   .jpSeal {
-    width:7.2vh; height:7.2vh; border-radius:50%;
+    width:5.2vh; height:5.2vh; border-radius:50%;
     background:radial-gradient(circle at 35% 30%, #fef08a, #ca8a04 70%, #854d0e 100%);
-    box-shadow:0 0 20px rgba(234,179,8,0.5), inset 0 2px 0 #fff;
+    box-shadow:0 0 16px rgba(234,179,8,0.55), inset 0 2px 0 #fff;
     border:2px solid #713f12;
     display:flex; align-items:center; justify-content:center;
-    font-size:2.8vh; font-weight:900; color:#713f12; letter-spacing:0.04em;
+    font-size:2.1vh; font-weight:900; color:#713f12; letter-spacing:0.04em;
     text-shadow:0 1px 0 rgba(255,255,255,0.6); z-index:2;
+    margin-top:2.2vh;
   }
 
   .centerLedDisplay {
@@ -167,8 +168,8 @@
 
   /* 中部控制按键排 (◀, ▶, 1-6, 8-13, Reset, GO) */
   #actionRow {
-    flex:0 0 auto; display:flex; gap:1.2vw; align-items:center;
-    padding:0.6vh 0;
+    flex:0 0 auto; display:flex; gap:1.6vw; align-items:center;
+    padding:0.6vh 0; margin:0.6vh 0;
   }
   .btnAction {
     flex:1; height:5.8vh; border-radius:1.2vh; border:none; cursor:pointer;
@@ -209,9 +210,10 @@
   /* 底部 8 门押注控制台 (复刻下半部经典阵列) */
   #betConsole {
     flex:0 0 auto;
-    background:#081014; border:2px solid #1e293b; border-radius:1vh;
-    padding:0.6vh 0.6vw; display:flex; flex-direction:column; gap:0.4vh;
-    box-shadow:inset 0 2px 8px #000;
+    background:#081014; border:1.5px solid #1e293b; border-radius:1.2vh;
+    padding:0.8vh 1.2vw 1.2vh 1.2vw; display:flex; flex-direction:column; gap:0.5vh;
+    box-shadow:inset 0 2px 8px #000, 0 4px 12px rgba(0,0,0,0.5);
+    margin-bottom:0.4vh;
   }
   .deckRow {
     display:grid; grid-template-columns:repeat(8, 1fr); gap:1vw;
@@ -287,18 +289,12 @@
 <div id="cabinetFrame">
   <!-- 顶部玩家与数码仪表 -->
   <div id="topBar">
-    <div class="playerRow">
-      <div class="pCard">
-        <div class="pAvatar">👤</div>
-        <div class="pInfo">
-          <span class="pId">VIP-8888</span>
-          <span class="pScore">在线连线</span>
-        </div>
-      </div>
-      <div style="display:flex;gap:1.4vw;">
+    <div class="topNavRow">
+      <span class="arcadeLogo">🎰 水果大满贯</span>
+      <div class="topOptGroup">
         <button class="btnTopOpt" id="btnHist">战报</button>
         <button class="btnTopOpt" id="btnAudio">音效</button>
-        <button class="btnTopOpt" id="btnDeposit">+1000</button>
+        <button class="btnTopOpt btnCoinUp" id="btnDeposit">+1000</button>
       </div>
     </div>
     <div class="ledRow">
