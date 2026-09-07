@@ -640,49 +640,44 @@ const totalBet = () => S.bets.reduce((a, b) => a + b, 0);
 // ==========================================
 // 3×3 经典老虎机核心定义与联动送灯控制器
 // ==========================================
+// 滚轮物理环带：包含严格唯一的 8 门水果，任意相邻截取的 3 行绝无重复
 // 水果档位映射：苹果(1) -> 橙子(2) -> 柠檬(3) -> 铃铛(4) -> 西瓜(5) -> 双星(6) -> 77(7) -> BAR(8)
-const SLOT_FRUITS = [
+const REEL_FRUITS = [
   { key: 'apple',      name: '苹果', spins: 1, weight: 32 },
-  { key: 'orange',     name: '橙子', spins: 2, weight: 28 },
-  { key: 'lemon',      name: '柠檬', spins: 3, weight: 24 },
   { key: 'bell',       name: '铃铛', spins: 4, weight: 20 },
-  { key: 'watermelon', name: '西瓜', spins: 5, weight: 16 },
+  { key: 'orange',     name: '橙子', spins: 2, weight: 28 },
   { key: 'star',       name: '双星', spins: 6, weight: 12 },
+  { key: 'lemon',      name: '柠檬', spins: 3, weight: 24 },
   { key: 'seven',      name: '77',   spins: 7, weight: 8  },
+  { key: 'watermelon', name: '西瓜', spins: 5, weight: 16 },
   { key: 'bar',        name: 'BAR',  spins: 8, weight: 5  }
 ];
-const SLOT_TOTAL_W = SLOT_FRUITS.reduce((sum, f) => sum + f.weight, 0);
+const REEL_LEN = REEL_FRUITS.length; // 8
 
-function pickSlotFruit() {
-  let r = Math.random() * SLOT_TOTAL_W;
-  for (const f of SLOT_FRUITS) {
-    r -= f.weight;
-    if (r <= 0) return f;
-  }
-  return SLOT_FRUITS[0];
-}
-
-// 8 条判定线（3横、3竖、2斜）
-const SLOT_LINES = [
-  { id: 'r0', name: '顶横线', coords: [[0,0], [1,0], [2,0]], p1: [6, 16.6], p2: [94, 16.6] },
-  { id: 'r1', name: '中横线', coords: [[0,1], [1,1], [2,1]], p1: [6, 50.0], p2: [94, 50.0] },
-  { id: 'r2', name: '底横线', coords: [[0,2], [1,2], [2,2]], p1: [6, 83.3], p2: [94, 83.3] },
-  { id: 'c0', name: '左竖线', coords: [[0,0], [0,1], [0,2]], p1: [16.6, 6], p2: [16.6, 94] },
-  { id: 'c1', name: '中竖线', coords: [[1,0], [1,1], [1,2]], p1: [50.0, 6], p2: [50.0, 94] },
-  { id: 'c2', name: '右竖线', coords: [[2,0], [2,1], [2,2]], p1: [83.3, 6], p2: [83.3, 94] },
-  { id: 'd0', name: '主对角', coords: [[0,0], [1,1], [2,2]], p1: [10, 10], p2: [90, 90] },
-  { id: 'd1', name: '副对角', coords: [[0,2], [1,1], [2,0]], p1: [10, 90], p2: [90, 10] },
-];
-
-let slotCurrentGrid = [
-  [SLOT_FRUITS[0], SLOT_FRUITS[1], SLOT_FRUITS[2]],
-  [SLOT_FRUITS[3], SLOT_FRUITS[4], SLOT_FRUITS[5]],
-  [SLOT_FRUITS[6], SLOT_FRUITS[7], SLOT_FRUITS[0]]
-];
+// 3 个滚轮各自当前的停靠位置索引（0..7）
+let slotReelPositions = [0, 2, 4];
 let slotSpinning = false;
 let extraSpinsQueue = 0;
 let isExtraSpinning = false;
 let totalExtraSpinsGranted = 0;
+
+// 获取滚轮在指定停靠点下露出的 3 个可见水果（环形连续 3 个，数学上必然各不相同）
+function getReelVisibleFruits(reelIdx, pos) {
+  return [
+    REEL_FRUITS[pos % REEL_LEN],
+    REEL_FRUITS[(pos + 1) % REEL_LEN],
+    REEL_FRUITS[(pos + 2) % REEL_LEN]
+  ];
+}
+
+// 5 条跨滚轮的经典直线中奖判定线（3横、2对角斜线）
+const SLOT_LINES = [
+  { id: 'r0', name: '顶横线', coords: [[0,0], [1,0], [2,0]], p1: [6, 16.6], p2: [94, 16.6] },
+  { id: 'r1', name: '中横线', coords: [[0,1], [1,1], [2,1]], p1: [6, 50.0], p2: [94, 50.0] },
+  { id: 'r2', name: '底横线', coords: [[0,2], [1,2], [2,2]], p1: [6, 83.3], p2: [94, 83.3] },
+  { id: 'd0', name: '主对角', coords: [[0,0], [1,1], [2,2]], p1: [10, 10], p2: [90, 90] },
+  { id: 'd1', name: '副对角', coords: [[0,2], [1,1], [2,0]], p1: [10, 90], p2: [90, 10] },
+];
 
 const isBusy = () => S.spinning || slotSpinning || isExtraSpinning;
 
@@ -709,7 +704,8 @@ function renderSlotStatic() {
     strip.style.transition = "none";
     strip.style.transform = "translateY(0px)";
     strip.innerHTML = "";
-    slotCurrentGrid[c].forEach((f, r) => {
+    const visible = getReelVisibleFruits(c, slotReelPositions[c]);
+    visible.forEach((f, r) => {
       const cell = document.createElement("div");
       cell.className = "slotCell";
       cell.id = `slotCell_${c}_${r}`;
@@ -769,32 +765,91 @@ function highlightSlotHits(hits) {
   });
 }
 
+// 目标停靠点生成引擎：严格保证各列绝不自重复，并兼具经典送灯概率
+function pickTargetReelPositions() {
+  const isBonus = Math.random() < 0.12; // 12% 黄金街机送灯爆率
+  if (isBonus) {
+    const line = SLOT_LINES[Math.floor(Math.random() * SLOT_LINES.length)];
+    const totalW = REEL_FRUITS.reduce((sum, f) => sum + f.weight, 0);
+    let r = Math.random() * totalW;
+    let targetFruitIdx = 0;
+    for (let i = 0; i < REEL_LEN; i++) {
+      r -= REEL_FRUITS[i].weight;
+      if (r <= 0) { targetFruitIdx = i; break; }
+    }
+    if (line.id === 'r0') {
+      return [targetFruitIdx, targetFruitIdx, targetFruitIdx];
+    } else if (line.id === 'r1') {
+      const p = (targetFruitIdx - 1 + REEL_LEN) % REEL_LEN;
+      return [p, p, p];
+    } else if (line.id === 'r2') {
+      const p = (targetFruitIdx - 2 + REEL_LEN) % REEL_LEN;
+      return [p, p, p];
+    } else if (line.id === 'd0') {
+      return [
+        targetFruitIdx,
+        (targetFruitIdx - 1 + REEL_LEN) % REEL_LEN,
+        (targetFruitIdx - 2 + REEL_LEN) % REEL_LEN
+      ];
+    } else if (line.id === 'd1') {
+      return [
+        (targetFruitIdx - 2 + REEL_LEN) % REEL_LEN,
+        (targetFruitIdx - 1 + REEL_LEN) % REEL_LEN,
+        targetFruitIdx
+      ];
+    }
+  }
+
+  // 非中奖轮次：随机挑选停靠点
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const pos = [
+      Math.floor(Math.random() * REEL_LEN),
+      Math.floor(Math.random() * REEL_LEN),
+      Math.floor(Math.random() * REEL_LEN)
+    ];
+    const testGrid = [
+      getReelVisibleFruits(0, pos[0]),
+      getReelVisibleFruits(1, pos[1]),
+      getReelVisibleFruits(2, pos[2])
+    ];
+    if (evaluateSlotPaylines(testGrid).length === 0) {
+      return pos;
+    }
+  }
+  return [Math.floor(Math.random() * REEL_LEN), Math.floor(Math.random() * REEL_LEN), Math.floor(Math.random() * REEL_LEN)];
+}
+
 function startSlotSpin() {
   clearSlotWinLines();
   slotSpinning = true;
 
-  const targetGrid = [
-    [pickSlotFruit(), pickSlotFruit(), pickSlotFruit()],
-    [pickSlotFruit(), pickSlotFruit(), pickSlotFruit()],
-    [pickSlotFruit(), pickSlotFruit(), pickSlotFruit()]
-  ];
-
+  const targetPositions = pickTargetReelPositions();
   const stopTimes = [1000, 1400, 1800];
 
   for (let c = 0; c < 3; c++) {
     const strip = document.getElementById("reelStrip" + c);
     if (!strip) continue;
 
-    const current3 = slotCurrentGrid[c];
-    const middleFruits = [];
-    for (let i = 0; i < 14; i++) middleFruits.push(pickSlotFruit());
-    const fullStrip = [...current3, ...middleFruits, ...targetGrid[c]];
+    const startPos = slotReelPositions[c];
+    const targetPos = targetPositions[c];
+
+    // 沿 8 门水果圆环顺时针滚动：至少滚动 2 整圈（16步）再精准落在目标点
+    let stepCount = (targetPos - startPos + REEL_LEN) % REEL_LEN;
+    if (stepCount < 4) stepCount += REEL_LEN;
+    stepCount += 2 * REEL_LEN; // 2 整圈旋转动量
+
+    // 构建严格按照物理 8 门圆环排列的长卷轴，滚动过程中也绝无相连重复
+    const animatedFruits = [];
+    for (let i = 0; i <= stepCount + 2; i++) {
+      const idx = (startPos + i) % REEL_LEN;
+      animatedFruits.push(REEL_FRUITS[idx]);
+    }
 
     strip.style.transition = "none";
     strip.style.transform = "translateY(0px)";
     strip.innerHTML = "";
 
-    fullStrip.forEach(f => {
+    animatedFruits.forEach(f => {
       const cell = document.createElement("div");
       cell.className = "slotCell";
       const img = IMGS[f.key];
@@ -806,7 +861,7 @@ function startSlotSpin() {
     });
 
     const cellH = strip.children[0]?.offsetHeight || 50;
-    const targetOffset = (fullStrip.length - 3) * cellH;
+    const targetOffset = stepCount * cellH;
     const durationMs = stopTimes[c];
 
     void strip.offsetWidth;
@@ -817,10 +872,15 @@ function startSlotSpin() {
       sndTick();
       if (c === 2) {
         slotSpinning = false;
-        slotCurrentGrid = targetGrid;
+        slotReelPositions = targetPositions;
         renderSlotStatic();
 
-        const hits = evaluateSlotPaylines(targetGrid);
+        const grid = [
+          getReelVisibleFruits(0, slotReelPositions[0]),
+          getReelVisibleFruits(1, slotReelPositions[1]),
+          getReelVisibleFruits(2, slotReelPositions[2])
+        ];
+        const hits = evaluateSlotPaylines(grid);
         if (hits.length > 0) {
           highlightSlotHits(hits);
           const bonus = hits.reduce((acc, h) => acc + h.spins, 0);
