@@ -139,21 +139,89 @@
 
 
 
-  .jpSeal {
-    width:5.2vh; height:5.2vh; border-radius:50%;
-    background:radial-gradient(circle at 35% 30%, #fef08a, #ca8a04 70%, #854d0e 100%);
-    box-shadow:0 0 16px rgba(234,179,8,0.55), inset 0 2px 0 #fff;
-    border:2px solid #713f12;
-    display:flex; align-items:center; justify-content:center;
-    font-size:2.1vh; font-weight:900; color:#713f12; letter-spacing:0.04em;
-    text-shadow:0 1px 0 rgba(255,255,255,0.6); z-index:2;
-    margin-top:2.2vh;
+  /* 中心 3x3 经典老虎机组件 */
+  .slotTopBar {
+    width:100%; display:flex; justify-content:space-between; align-items:center;
+    z-index:5; flex:0 0 auto;
+  }
+  .slotTitleBadge {
+    background:rgba(0,0,0,0.7); border:1px solid rgba(245,158,11,0.5);
+    color:#fef08a; border-radius:0.8vh; padding:0.2vh 1.2vw;
+    font-size:1.1vh; font-weight:900; letter-spacing:0.04em;
+    text-shadow:0 0 6px rgba(245,158,11,0.6);
+  }
+  .extraSpinsBadge {
+    background:rgba(6,78,59,0.75); border:1px solid #10b981;
+    color:#6ee7b7; border-radius:0.8vh; padding:0.2vh 1.2vw;
+    font-size:1.1vh; font-weight:900; letter-spacing:0.04em;
+    transition:all 0.3s;
+  }
+  .extraSpinsBadge.active {
+    background:linear-gradient(90deg, #b45309, #d97706);
+    border-color:#fef08a; color:#fff;
+    box-shadow:0 0 12px #f59e0b;
+    animation:extraBadgeGlow 0.6s infinite alternate;
+  }
+  @keyframes extraBadgeGlow {
+    from { transform:scale(1); filter:brightness(1); }
+    to { transform:scale(1.05); filter:brightness(1.25); }
   }
 
+  #slotCabinet {
+    width:100%; flex:1 1 auto; display:flex; align-items:center; justify-content:center;
+    position:relative; z-index:4; min-height:0; margin:0.4vh 0;
+  }
+  .slotReelWindow {
+    width:100%; max-width:215px; height:18.5vh; max-height:165px;
+    background:rgba(8,12,20,0.78); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+    border:2px solid rgba(245,158,11,0.6); border-radius:1vh;
+    box-shadow:inset 0 0 16px rgba(0,0,0,0.9), 0 0 16px rgba(0,0,0,0.7);
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:1.4vw;
+    padding:0.4vh 0.6vw; position:relative; overflow:hidden;
+  }
+  #slotLineSvg {
+    position:absolute; inset:0; width:100%; height:100%;
+    pointer-events:none; z-index:20;
+  }
+  .slotReel {
+    height:100%; overflow:hidden; position:relative;
+    border-radius:0.6vh; background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.06);
+  }
+  .reelStrip {
+    display:flex; flex-direction:column; width:100%; position:absolute; top:0; left:0;
+    will-change:transform;
+  }
+  .slotCell {
+    height:5.6vh; max-height:51px; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; position:relative; border-radius:0.5vh; transition:background 0.2s, transform 0.2s;
+  }
+  .slotSymbolImg {
+    width:3.8vh; height:3.8vh; max-width:36px; max-height:36px;
+    object-fit:contain; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+    transition:transform 0.2s;
+  }
+  .slotCell.winHit {
+    background:radial-gradient(circle, rgba(245,158,11,0.5), rgba(180,83,9,0.25));
+    border:1.5px solid #fef08a; box-shadow:0 0 12px #f59e0b, inset 0 0 6px #fef08a;
+    animation:slotWinPulse 0.35s infinite alternate; z-index:10;
+  }
+  .slotCell.winHit .slotSymbolImg {
+    transform:scale(1.18);
+  }
+  @keyframes slotWinPulse {
+    from { opacity:1; filter:brightness(1); }
+    to { opacity:0.75; filter:brightness(1.4); }
+  }
+
+  .slotBottomBar {
+    width:100%; display:flex; justify-content:center; align-items:center;
+    z-index:5; flex:0 0 auto;
+  }
   .centerLedDisplay {
     background:#06080d; border:2px solid #1e293b; border-radius:0.6vh;
-    padding:0.2vh 1.4vw; min-width:60px; text-align:center;
-    font-family:"Courier New", monospace; font-size:3.2vh; font-weight:900;
+    padding:0.2vh 1.4vw; min-width:64px; text-align:center;
+    font-family:"Courier New", monospace; font-size:2.6vh; font-weight:900;
     color:#ef4444; text-shadow:0 0 8px #ef4444; z-index:2;
   }
 
@@ -305,8 +373,34 @@
     <div id="trackGrid">
       <!-- 24 盏外围灯位由脚本依据 7x7 顺时针网格绝对生成 -->
       <div id="centerStage">
-        <div class="jpSeal">JP</div>
-        <div class="centerLedDisplay" id="centerNum">0</div>
+        <div class="slotTopBar">
+          <div class="slotTitleBadge">🎰 3×3 老虎机</div>
+          <div class="extraSpinsBadge" id="extraSpinsBadge">送灯: 0 次</div>
+        </div>
+
+        <div id="slotCabinet">
+          <div class="slotReelWindow">
+            <div class="slotReel" id="slotReel0"><div class="reelStrip" id="reelStrip0"></div></div>
+            <div class="slotReel" id="slotReel1"><div class="reelStrip" id="reelStrip1"></div></div>
+            <div class="slotReel" id="slotReel2"><div class="reelStrip" id="reelStrip2"></div></div>
+            <svg id="slotLineSvg" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <defs>
+                <filter id="slotLaserGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="2.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+            </svg>
+          </div>
+        </div>
+
+        <div class="slotBottomBar">
+          <div class="centerLedDisplay" id="centerNum">0</div>
+        </div>
       </div>
     </div>
   </div>
@@ -542,7 +636,206 @@ function saveState() {
 }
 
 const totalBet = () => S.bets.reduce((a, b) => a + b, 0);
-const isBusy = () => S.spinning;
+
+// ==========================================
+// 3×3 经典老虎机核心定义与联动送灯控制器
+// ==========================================
+// 水果档位映射：苹果(1) -> 橙子(2) -> 柠檬(3) -> 铃铛(4) -> 西瓜(5) -> 双星(6) -> 77(7) -> BAR(8)
+const SLOT_FRUITS = [
+  { key: 'apple',      name: '苹果', spins: 1, weight: 32 },
+  { key: 'orange',     name: '橙子', spins: 2, weight: 28 },
+  { key: 'lemon',      name: '柠檬', spins: 3, weight: 24 },
+  { key: 'bell',       name: '铃铛', spins: 4, weight: 20 },
+  { key: 'watermelon', name: '西瓜', spins: 5, weight: 16 },
+  { key: 'star',       name: '双星', spins: 6, weight: 12 },
+  { key: 'seven',      name: '77',   spins: 7, weight: 8  },
+  { key: 'bar',        name: 'BAR',  spins: 8, weight: 5  }
+];
+const SLOT_TOTAL_W = SLOT_FRUITS.reduce((sum, f) => sum + f.weight, 0);
+
+function pickSlotFruit() {
+  let r = Math.random() * SLOT_TOTAL_W;
+  for (const f of SLOT_FRUITS) {
+    r -= f.weight;
+    if (r <= 0) return f;
+  }
+  return SLOT_FRUITS[0];
+}
+
+// 8 条判定线（3横、3竖、2斜）
+const SLOT_LINES = [
+  { id: 'r0', name: '顶横线', coords: [[0,0], [1,0], [2,0]], p1: [6, 16.6], p2: [94, 16.6] },
+  { id: 'r1', name: '中横线', coords: [[0,1], [1,1], [2,1]], p1: [6, 50.0], p2: [94, 50.0] },
+  { id: 'r2', name: '底横线', coords: [[0,2], [1,2], [2,2]], p1: [6, 83.3], p2: [94, 83.3] },
+  { id: 'c0', name: '左竖线', coords: [[0,0], [0,1], [0,2]], p1: [16.6, 6], p2: [16.6, 94] },
+  { id: 'c1', name: '中竖线', coords: [[1,0], [1,1], [1,2]], p1: [50.0, 6], p2: [50.0, 94] },
+  { id: 'c2', name: '右竖线', coords: [[2,0], [2,1], [2,2]], p1: [83.3, 6], p2: [83.3, 94] },
+  { id: 'd0', name: '主对角', coords: [[0,0], [1,1], [2,2]], p1: [10, 10], p2: [90, 90] },
+  { id: 'd1', name: '副对角', coords: [[0,2], [1,1], [2,0]], p1: [10, 90], p2: [90, 10] },
+];
+
+let slotCurrentGrid = [
+  [SLOT_FRUITS[0], SLOT_FRUITS[1], SLOT_FRUITS[2]],
+  [SLOT_FRUITS[3], SLOT_FRUITS[4], SLOT_FRUITS[5]],
+  [SLOT_FRUITS[6], SLOT_FRUITS[7], SLOT_FRUITS[0]]
+];
+let slotSpinning = false;
+let extraSpinsQueue = 0;
+let isExtraSpinning = false;
+let totalExtraSpinsGranted = 0;
+
+const isBusy = () => S.spinning || slotSpinning || isExtraSpinning;
+
+function updateExtraSpinsBadge() {
+  const b = document.getElementById("extraSpinsBadge");
+  if (!b) return;
+  b.textContent = `送灯: ${extraSpinsQueue} 次`;
+  b.classList.toggle("active", extraSpinsQueue > 0);
+}
+
+function clearSlotWinLines() {
+  const svg = document.getElementById("slotLineSvg");
+  if (svg) {
+    const lines = svg.querySelectorAll("line");
+    lines.forEach(l => l.remove());
+  }
+  document.querySelectorAll(".slotCell.winHit").forEach(el => el.classList.remove("winHit"));
+}
+
+function renderSlotStatic() {
+  for (let c = 0; c < 3; c++) {
+    const strip = document.getElementById("reelStrip" + c);
+    if (!strip) continue;
+    strip.style.transition = "none";
+    strip.style.transform = "translateY(0px)";
+    strip.innerHTML = "";
+    slotCurrentGrid[c].forEach((f, r) => {
+      const cell = document.createElement("div");
+      cell.className = "slotCell";
+      cell.id = `slotCell_${c}_${r}`;
+      const img = IMGS[f.key];
+      const src = (img && img.src) ? img.src : "";
+      cell.innerHTML = src
+        ? `<img class="slotSymbolImg" src="${src}" alt="${f.name}">`
+        : `<span style="font-size:1.4vh;font-weight:900;">${f.name}</span>`;
+      strip.appendChild(cell);
+    });
+  }
+}
+
+function initSlotMachine() {
+  renderSlotStatic();
+  updateExtraSpinsBadge();
+}
+
+function evaluateSlotPaylines(grid) {
+  const hits = [];
+  for (const line of SLOT_LINES) {
+    const [c1, c2, c3] = line.coords;
+    const f1 = grid[c1[0]][c1[1]];
+    const f2 = grid[c2[0]][c2[1]];
+    const f3 = grid[c3[0]][c3[1]];
+    if (f1 && f2 && f3 && f1.key === f2.key && f2.key === f3.key) {
+      hits.push({
+        line: line,
+        fruit: f1,
+        spins: f1.spins
+      });
+    }
+  }
+  return hits;
+}
+
+function highlightSlotHits(hits) {
+  clearSlotWinLines();
+  const svg = document.getElementById("slotLineSvg");
+  hits.forEach(h => {
+    h.line.coords.forEach(([col, row]) => {
+      const cell = document.getElementById(`slotCell_${col}_${row}`);
+      if (cell) cell.classList.add("winHit");
+    });
+    if (svg) {
+      const lineEl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      lineEl.setAttribute("x1", h.line.p1[0] + "%");
+      lineEl.setAttribute("y1", h.line.p1[1] + "%");
+      lineEl.setAttribute("x2", h.line.p2[0] + "%");
+      lineEl.setAttribute("y2", h.line.p2[1] + "%");
+      lineEl.setAttribute("stroke", "#fbbf24");
+      lineEl.setAttribute("stroke-width", "4");
+      lineEl.setAttribute("stroke-linecap", "round");
+      lineEl.setAttribute("filter", "url(#slotLaserGlow)");
+      svg.appendChild(lineEl);
+    }
+  });
+}
+
+function startSlotSpin() {
+  clearSlotWinLines();
+  slotSpinning = true;
+
+  const targetGrid = [
+    [pickSlotFruit(), pickSlotFruit(), pickSlotFruit()],
+    [pickSlotFruit(), pickSlotFruit(), pickSlotFruit()],
+    [pickSlotFruit(), pickSlotFruit(), pickSlotFruit()]
+  ];
+
+  const stopTimes = [1000, 1400, 1800];
+
+  for (let c = 0; c < 3; c++) {
+    const strip = document.getElementById("reelStrip" + c);
+    if (!strip) continue;
+
+    const current3 = slotCurrentGrid[c];
+    const middleFruits = [];
+    for (let i = 0; i < 14; i++) middleFruits.push(pickSlotFruit());
+    const fullStrip = [...current3, ...middleFruits, ...targetGrid[c]];
+
+    strip.style.transition = "none";
+    strip.style.transform = "translateY(0px)";
+    strip.innerHTML = "";
+
+    fullStrip.forEach(f => {
+      const cell = document.createElement("div");
+      cell.className = "slotCell";
+      const img = IMGS[f.key];
+      const src = (img && img.src) ? img.src : "";
+      cell.innerHTML = src
+        ? `<img class="slotSymbolImg" src="${src}" alt="${f.name}">`
+        : `<span style="font-size:1.4vh;font-weight:900;">${f.name}</span>`;
+      strip.appendChild(cell);
+    });
+
+    const cellH = strip.children[0]?.offsetHeight || 50;
+    const targetOffset = (fullStrip.length - 3) * cellH;
+    const durationMs = stopTimes[c];
+
+    void strip.offsetWidth;
+    strip.style.transition = `transform ${durationMs}ms cubic-bezier(0.12, 0.88, 0.33, 1.04)`;
+    strip.style.transform = `translateY(-${targetOffset}px)`;
+
+    setTimeout(() => {
+      sndTick();
+      if (c === 2) {
+        slotSpinning = false;
+        slotCurrentGrid = targetGrid;
+        renderSlotStatic();
+
+        const hits = evaluateSlotPaylines(targetGrid);
+        if (hits.length > 0) {
+          highlightSlotHits(hits);
+          const bonus = hits.reduce((acc, h) => acc + h.spins, 0);
+          extraSpinsQueue += bonus;
+          totalExtraSpinsGranted += bonus;
+          updateExtraSpinsBadge();
+          sndWin(true);
+          sndTrain(1);
+          const hitNames = hits.map(h => `${h.fruit.name}(+${h.spins}次)`).join('、');
+          showToast(`🎉 3×3老虎机连线【${hitNames}】！获赠 ${bonus} 次外围送灯！`);
+        }
+      }
+    }, durationMs);
+  }
+}
 
 const wheel = {
   pos: 0, speed: 0, phase: "idle", target: 0, targetFruit: 0,
@@ -811,35 +1104,79 @@ function spin() {
   if (tb > S.credits) { showToast("余额不足，请先充值"); sndThud(); return; }
 
   S.credits -= tb; saveState(); S.spinning = true;
+  extraSpinsQueue = 0; totalExtraSpinsGranted = 0;
+  clearSlotWinLines(); updateExtraSpinsBadge();
+
   wheel.luckWonLamps = []; wheel.luckEvent = null;
   wheel.target = pickTarget(); wheel.targetFruit = LAMPS[wheel.target];
   wheel.phase = "accel"; wheel.t = 0; wheel.speed = 0;
+
+  // 启动中心 3×3 老虎机同步旋转！
+  startSlotSpin();
+
+  renderUI();
+}
+
+function handleRoundFinish() {
+  // 若中心 3x3 奖励了送灯次数，则自动衔接执行下一次外围免费送灯
+  if (extraSpinsQueue > 0) {
+    S.spinning = true;
+    isExtraSpinning = true;
+    updateExtraSpinsBadge();
+    renderUI();
+    setTimeout(() => {
+      executeNextExtraSpin();
+    }, 1200);
+  } else {
+    S.spinning = false;
+    isExtraSpinning = false;
+    needResetBets = true;
+    updateExtraSpinsBadge();
+    renderUI();
+  }
+}
+
+function executeNextExtraSpin() {
+  if (extraSpinsQueue <= 0) {
+    handleRoundFinish();
+    return;
+  }
+  extraSpinsQueue--;
+  updateExtraSpinsBadge();
+  S.spinning = true;
+  isExtraSpinning = true;
+  wheel.luckWonLamps = [];
+  wheel.luckEvent = null;
+  wheel.target = pickTarget();
+  wheel.targetFruit = LAMPS[wheel.target];
+  wheel.phase = "accel";
+  wheel.t = 0;
+  wheel.speed = 0;
+  sndCoin();
+  showToast(`🎰【免费送灯】第 ${totalExtraSpinsGranted - extraSpinsQueue} 次开跑！`);
   renderUI();
 }
 
 function resolveRound() {
-  S.spinning = false;
-  needResetBets = true;
   const fi = wheel.targetFruit, F = SYMS[fi];
   const win = S.bets[F.p] * F.odds;
 
-  recordHistory(`${F.name} ×${F.odds}`, win, false);
+  recordHistory(isExtraSpinning ? `[送灯] ${F.name} ×${F.odds}` : `${F.name} ×${F.odds}`, win, false);
 
   if (win > 0) {
-    pendingWin = win; saveState();
+    pendingWin += win; saveState();
     sndWin(win >= 500);
-    showToast(`中奖 ${F.name} ×${F.odds}！赢得 ${win.toLocaleString()} 分`);
+    showToast(`${isExtraSpinning ? '🎁【送灯命中】' : ''}中奖 ${F.name} ×${F.odds}！赢得 ${win.toLocaleString()} 分`);
   } else {
-    sndThud(); showToast(`${F.name} ×${F.odds} · 未中`);
+    sndThud(); showToast(`${isExtraSpinning ? '🎁【送灯】' : ''}${F.name} ×${F.odds} · 未中`);
   }
   renderUI();
+  handleRoundFinish();
 }
 
 function resolveLuckRound() {
-  S.spinning = false;
-  needResetBets = true;
   const ev = wheel.luckEvent;
-  if (!ev) { renderUI(); return; }
+  if (!ev) { renderUI(); handleRoundFinish(); return; }
 
   let totalWin = 0;
   if (ev.type === "grand_slam") {
@@ -855,15 +1192,16 @@ function resolveLuckRound() {
     });
   }
 
-  recordHistory(`LUCK·${ev.name}`, totalWin, true);
+  recordHistory(isExtraSpinning ? `[送灯] LUCK·${ev.name}` : `LUCK·${ev.name}`, totalWin, true);
 
   if (totalWin > 0) {
-    pendingWin = totalWin; saveState(); sndWin(true); sndTrain(2);
+    pendingWin += totalWin; saveState(); sndWin(true); sndTrain(2);
     showToast(`🎉【${ev.name}】赢得 ${totalWin.toLocaleString()} 分！`);
   } else {
     sndThud(); showToast(`🎰【${ev.name}】未押中送出项`);
   }
   renderUI();
+  handleRoundFinish();
 }
 
 function gambleDice(isBig) {
@@ -928,7 +1266,13 @@ function renderUI() {
 
   const btnGo = document.getElementById("btnGo");
   btnGo.disabled = b;
-  btnGo.textContent = pendingWin > 0 ? "收分" : "GO";
+  if (isExtraSpinning) {
+    btnGo.textContent = "送灯中";
+  } else if (pendingWin > 0) {
+    btnGo.textContent = "收分";
+  } else {
+    btnGo.textContent = "GO";
+  }
   btnGo.classList.toggle("pulse", !b && (totalBet() > 0 || pendingWin > 0));
 }
 
@@ -1042,7 +1386,10 @@ function buildCabinetDOM() {
 
   document.getElementById("btnReset").onclick = () => {
     if (isBusy()) return;
-    collectPending(); S.bets.fill(0); needResetBets = false; sndClick(); renderUI();
+    collectPending(); S.bets.fill(0); needResetBets = false;
+    extraSpinsQueue = 0; totalExtraSpinsGranted = 0;
+    clearSlotWinLines(); updateExtraSpinsBadge();
+    sndClick(); renderUI();
   };
 
   document.getElementById("btnDeposit").onclick = () => {
@@ -1081,6 +1428,7 @@ window.addEventListener("pointerdown", () => {
 }, { once: true });
 
 buildCabinetDOM();
+initSlotMachine();
 renderUI();
 requestAnimationFrame(frame);
 </script>
