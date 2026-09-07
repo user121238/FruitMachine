@@ -2,10 +2,8 @@ name: Build Game Packages (APK & IPA)
 
 on:
   push:
-    branches: [ main, master ]
-    tags: [ 'v*' ]
-  pull_request:
-    branches: [ main, master ]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -68,12 +66,11 @@ jobs:
           if-no-files-found: error
 
   # ==========================================
-  # 3. 自动发布 Release (推送 master 或 Tag 均自动发布)
+  # 3. 自动发布 Release (版本发布)
   # ==========================================
   release:
     name: Create GitHub Release
     needs: [build-apk, build-ipa]
-    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
 
     steps:
