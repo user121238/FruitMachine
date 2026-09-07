@@ -34,24 +34,29 @@
   }
   .topNavRow {
     display:flex; align-items:center; justify-content:space-between;
-    padding:0.2vh 0;
+    padding:0.2vh 0; flex-wrap:nowrap;
   }
   .arcadeLogo {
-    font-size:1.6vh; font-weight:900; letter-spacing:0.06em;
-    color:#94a3b8; text-shadow:0 1px 2px #000;
+    font-size:1.6vh; font-weight:900; letter-spacing:0.04em;
+    color:#94a3b8; text-shadow:0 1px 2px #000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .topOptGroup {
-    display:flex; gap:1.8vw; align-items:center;
+    display:flex; gap:1.4vw; align-items:center; flex-shrink:0;
   }
   .btnTopOpt {
-    padding:0.5vh 2.4vw; background:linear-gradient(180deg, #334155, #1e293b);
+    padding:0.5vh 2.0vw; background:linear-gradient(180deg, #334155, #1e293b);
     color:#f1f5f9; border:1px solid #475569; border-radius:0.8vh; font-size:1.3vh; font-weight:800; cursor:pointer;
     box-shadow:0 2px 6px rgba(0,0,0,0.4);
   }
   .btnTopOpt:active { transform:scale(0.95); }
+  .btnTopOpt:disabled { opacity:0.4; cursor:not-allowed; }
   .btnCoinUp {
     background:linear-gradient(180deg, #f59e0b, #d97706);
     border-color:#b45309; color:#fff;
+  }
+  .btnCoinDown {
+    background:linear-gradient(180deg, #ef4444, #b91c1c);
+    border-color:#991b1b; color:#fff;
   }
 
   .ledRow {
@@ -353,7 +358,8 @@
       <div class="topOptGroup">
         <button class="btnTopOpt" id="btnHist">战报</button>
         <button class="btnTopOpt" id="btnAudio">音效</button>
-        <button class="btnTopOpt btnCoinUp" id="btnDeposit">+1000</button>
+        <button class="btnTopOpt btnCoinUp" id="btnDeposit" title="一键上分 (+1000)">+1000</button>
+        <button class="btnTopOpt btnCoinDown" id="btnWithdraw" title="一键下分（清空所有积分）">下分</button>
       </div>
     </div>
     <div class="ledRow">
@@ -1315,6 +1321,11 @@ function renderUI() {
   });
 
   const b = isBusy();
+  const btnDeposit = document.getElementById("btnDeposit");
+  if (btnDeposit) btnDeposit.disabled = b;
+  const btnWithdraw = document.getElementById("btnWithdraw");
+  if (btnWithdraw) btnWithdraw.disabled = b;
+
   const canGamble = !b && pendingWin > 0;
   document.getElementById("btnGambleSmall").disabled = !canGamble;
   document.getElementById("btnGambleBig").disabled = !canGamble;
@@ -1453,7 +1464,32 @@ function buildCabinetDOM() {
   };
 
   document.getElementById("btnDeposit").onclick = () => {
+    if (isBusy()) return;
     S.credits += 1000; saveState(); sndCoin(); showToast("上分 +1,000 成功"); renderUI();
+  };
+  document.getElementById("btnWithdraw").onclick = () => {
+    if (isBusy()) {
+      showToast("游戏进行中，暂不能下分");
+      sndThud();
+      return;
+    }
+    const clearedCredits = S.credits;
+    const clearedWin = pendingWin;
+    const clearedBets = totalBet();
+    const totalCleared = clearedCredits + clearedWin + clearedBets;
+    if (totalCleared <= 0) {
+      showToast("当前积分为 0，无需下分");
+      sndThud();
+      return;
+    }
+    S.credits = 0;
+    pendingWin = 0;
+    S.bets.fill(0);
+    needResetBets = false;
+    saveState();
+    sndCoin();
+    showToast(`下分成功！已清空 ${totalCleared.toLocaleString()} 积分`);
+    renderUI();
   };
   document.getElementById("btnAudio").onclick = () => {
     S.muted = !S.muted;
