@@ -137,16 +137,7 @@
     pointer-events:none;
   }
 
-  .centerTopBadge {
-    display:flex; align-items:center; gap:0.6vw;
-    background:rgba(0,0,0,0.65); border:1px solid rgba(255,255,255,0.15);
-    border-radius:1.2vh; padding:0.4vh 1.2vw; font-size:1.5vh; font-weight:900;
-    color:#f8fafc; z-index:2;
-  }
-  .btnChipToggle {
-    background:#10b981; border:none; border-radius:50%; width:2.2vh; height:2.2vh;
-    color:#fff; font-size:1.2vh; cursor:pointer; display:flex; align-items:center; justify-content:center;
-  }
+
 
   .jpSeal {
     width:5.2vh; height:5.2vh; border-radius:50%;
@@ -314,10 +305,6 @@
     <div id="trackGrid">
       <!-- 24 盏外围灯位由脚本依据 7x7 顺时针网格绝对生成 -->
       <div id="centerStage">
-        <div class="centerTopBadge">
-          <span>1注 = <b id="chipText" style="color:#f59e0b;">10</b> 金币</span>
-          <button class="btnChipToggle" id="btnChipToggle">↻</button>
-        </div>
         <div class="jpSeal">JP</div>
         <div class="centerLedDisplay" id="centerNum">0</div>
       </div>
@@ -533,10 +520,8 @@ function sndTrain(step = 0) {
   });
 }
 
-const CHIP_OPTS = [1, 5, 10, 50, 100, 500];
-let chipIndex = 2; // default 10
-const BET_CAP = 9999;
-const S = { credits: 1000, bets: new Array(PARENT_N).fill(0), chip: 10, muted: false, spinning: false };
+const BET_CAP = 99; // 单个标志位上限 99 分
+const S = { credits: 1000, bets: new Array(PARENT_N).fill(0), chip: 1, muted: false, spinning: false }; // 固定 1 积分下注倍率
 let pendingWin = 0;
 let needResetBets = false;
 
@@ -793,11 +778,12 @@ function placeBet(pi) {
     S.bets.fill(0);
     needResetBets = false;
   }
-  if (S.credits - totalBet() < S.chip) {
+  if (S.bets[pi] >= BET_CAP) return;
+  if (S.credits - totalBet() < 1) {
     showToast("分数不足，请先上分");
     sndThud(); return;
   }
-  S.bets[pi] = Math.min(BET_CAP, S.bets[pi] + S.chip);
+  S.bets[pi] = Math.min(BET_CAP, S.bets[pi] + 1);
   sndClick();
   renderUI();
 }
@@ -958,7 +944,8 @@ function bindHold(el, fn) {
   let iv = 0, to = 0;
   const start = e => {
     e.preventDefault(); fn();
-    to = setTimeout(() => { iv = setInterval(fn, 110); }, 380);
+    // 长按快速上分：按住 250ms 后启动，以 40ms 极速累加至上限 99
+    to = setTimeout(() => { iv = setInterval(fn, 40); }, 250);
   };
   const stop = () => { clearTimeout(to); clearInterval(iv); };
   el.addEventListener("pointerdown", start);
@@ -994,6 +981,11 @@ function buildCabinetDOM() {
     else if (F.luck) subHtml = `<span class="barTextBadge" style="color:#fff;">LUCK</span>`;
 
     cell.innerHTML = iconHtml + subHtml;
+    // 点击或长按转盘上的水果标志位亦可直接上分
+    if (F.p >= 0) {
+      bindHold(cell, () => placeBet(F.p));
+      cell.style.cursor = "pointer";
+    }
     grid.appendChild(cell);
   }
 
@@ -1006,11 +998,15 @@ function buildCabinetDOM() {
     const oddsCell = document.createElement("div");
     oddsCell.className = "oddsCell"; oddsCell.id = "oddsCell" + colIdx;
     oddsCell.textContent = DECK_ODDS_DISPLAY[colIdx];
+    bindHold(oddsCell, () => placeBet(pi));
+    oddsCell.style.cursor = "pointer";
     oddsRow.appendChild(oddsCell);
 
     const betLed = document.createElement("div");
     betLed.className = "betLedCell"; betLed.id = "betLed" + colIdx;
     betLed.textContent = "0";
+    bindHold(betLed, () => placeBet(pi));
+    betLed.style.cursor = "pointer";
     betsLedRow.appendChild(betLed);
 
     const btn = document.createElement("div");
@@ -1047,13 +1043,6 @@ function buildCabinetDOM() {
   document.getElementById("btnReset").onclick = () => {
     if (isBusy()) return;
     collectPending(); S.bets.fill(0); needResetBets = false; sndClick(); renderUI();
-  };
-
-  document.getElementById("btnChipToggle").onclick = () => {
-    chipIndex = (chipIndex + 1) % CHIP_OPTS.length;
-    S.chip = CHIP_OPTS[chipIndex];
-    document.getElementById("chipText").textContent = S.chip;
-    sndClick();
   };
 
   document.getElementById("btnDeposit").onclick = () => {
